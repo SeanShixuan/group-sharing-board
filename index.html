@@ -74,6 +74,9 @@
     }
     .dark .card-shadow:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2); }
 
+    .announcement-card { background: #fff2e8; }
+    .dark .announcement-card { background: #2a2218; }
+
     .modal-backdrop { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); }
 
     .toast-container {
@@ -243,12 +246,13 @@
   (function() {
     'use strict';
 
-    const STORAGE_KEY = 'cc_circle_posts_v3';
+    const STORAGE_KEY = 'cc_circle_posts_v4';
     const DARK_MODE_KEY = 'cc_circle_dark';
     const NICKNAME_KEY = 'cc_circle_nickname';
     const GIST_TOKEN_KEY = 'cc_circle_gist_token';
     const GIST_ID_KEY = 'cc_circle_gist_id';
     const GIST_FILENAME = 'cc-circle-posts.json';
+    const ANNOUNCEMENT_COLLAPSED_KEY = 'cc_circle_announcement_collapsed';
 
     const AVATAR_COLORS = ['#ff7a45','#ff9a76','#febf63','#ffb5a7','#fec89a','#f8ad9d','#ff8c69','#ffab76','#f4a261','#e59866','#ffcfb3','#ffd6ba'];
     const ANON_NAMES = ['小透明','路过的朋友','潜水员','围观的','吃瓜群众','树洞','悄悄话','匿名小可爱'];
@@ -256,6 +260,23 @@
       inspiration: { label: '灵感想法', icon: '💡' },
       update: { label: '日常近况', icon: '📝' },
       opportunity: { label: '机会合作', icon: '🤝' },
+    };
+
+    // ==================== ANNOUNCEMENT CONFIG ====================
+    // 修改公告内容只需改下面这段文字，支持换行和 emoji
+    const ANNOUNCEMENT = {
+      title: '📢 置顶公告・圈子使用说明',
+      content: `哈喽各位～这是我们私享的分享小圈子
+
+✅ 可以发这些内容：
+・灵感脑洞：任何点子、构思、项目想法都能丢进来
+・日常碎碎念：最近的工作生活、学习收获、踩坑经验
+・机会对接：内推、合作、找伙伴、资源互换
+
+💡 小提示：
+看到感兴趣的想法，可以点「续想法」接着延伸思路；右上角同步按钮可以拉取 / 上传最新数据，换设备也不丢内容
+
+畅所欲言就好，不用有负担～`,
     };
 
     function avatarColor(name) { let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h); return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]; }
@@ -297,24 +318,7 @@
     }
     function savePosts() { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); }
 
-    function getSeedData() {
-      const now = Date.now(); const h = (n) => now - 3600000 * n;
-      const c1a={id:uid(),author:'小红',content:'好想法！我之前做过类似的尝试，有空一起聊聊～',createdAt:h(1.2),parentId:null,replyTo:null};
-      const c1b={id:uid(),author:'小李',content:'边权重这块我推荐试试 TF-IDF + 余弦相似度的组合',createdAt:h(0.6),parentId:null,replyTo:null};
-      const c1c={id:uid(),author:'小明',content:'有道理，我试试看',createdAt:h(0.2),parentId:c1b.id,replyTo:'小李'};
-      const c2a={id:uid(),author:'小王',content:'文档真的写得超好！',createdAt:h(4),parentId:null,replyTo:null};
-      const c2b={id:uid(),author:'阿杰',content:'悄悄关注好久了，一路看着涨起来的',createdAt:h(3),parentId:null,replyTo:null};
-      const c2c={id:uid(),author:'老张',content:'感谢感谢🥹 继续努力',createdAt:h(2.5),parentId:c2b.id,replyTo:'阿杰'};
-      const c2d={id:uid(),author:'小刘',content:'配置面板有计划开源吗？想用',createdAt:h(1.5),parentId:null,replyTo:null};
-      return [
-        {id:uid(),type:'inspiration',title:'用 AI 做社群知识图谱，有人搞过吗？',content:'最近在琢磨一个事：能不能用 LLM 自动从群聊记录里提取知识点，然后搭一个可视化的知识图谱。\n\n大概思路是 embedding 聚类 → GPT 摘要抽取 → 前端渲染。\n\n不知道群里有没有朋友做过类似的？踩过什么坑吗？',tags:['AI','知识管理','社群'],author:'小明',isAnonymous:false,createdAt:h(2),likes:12,liked:false,favorites:5,favorited:false,comments:[c1a,c1b,c1c],derivations:[{id:uid(),title:'',content:'在这个基础上加个 RAG 问答层，让群成员可以直接搜知识库，体验会很好',author:'小红',createdAt:h(1),likes:5,liked:false,comments:[{id:uid(),author:'小明',content:'这个方向好！我想想怎么整合',createdAt:h(0.7),parentId:null,replyTo:null}]}]},
-        {id:uid(),type:'update',title:'',content:'我们的开源项目破 1K Star 了！！🎉\n\n从去年开始做，熬了无数个夜，终于看到一点成果。感谢群里帮忙测试、提意见、写文档的每一位朋友，这个 milestone 有你们一份。\n\n接下来想搞个可视化的配置面板 + 多语言支持，有想一起玩的随时找我～',tags:['开源','微服务','日常'],author:'老张',isAnonymous:false,createdAt:h(5),likes:28,liked:false,favorites:12,favorited:false,comments:[c2a,c2b,c2c,c2d],derivations:[]},
-        {id:uid(),type:'opportunity',title:'找一位会 Canvas 的前端一起搞事情',content:'在做一个小众的实时协作白板，后端 Go + WebSocket 已经搞定了，前端缺一个对 Canvas 或者 SVG 熟的朋友。\n\n目前的定位是轻量级在线协作工具，面向小团队。技术栈不复杂，主要是想找一个对交互体验有追求的人一起打磨产品。\n\n每周投入 5-10 小时，远程协作，项目分成。有兴趣的找我私聊～',tags:['协作','远程','创业'],author:'阿杰',isAnonymous:false,createdAt:h(9),likes:15,liked:false,favorites:8,favorited:false,comments:[],derivations:[{id:uid(),title:'',content:'建议了解一下 CRDT 方案，Yjs 不错，处理多人编辑冲突比 OT 简单',author:'技术老刘',createdAt:h(5),likes:8,liked:false,comments:[]},{id:uid(),title:'',content:'Figma 用的 WASM 渲染，性能很好，可以参考他们的架构思路',author:'前端爱好者',createdAt:h(3.5),likes:3,liked:false,comments:[]}]},
-        {id:uid(),type:'inspiration',title:'',content:'每次写周报都头大，花一两个小时翻聊天记录和 commit log。想做一个自动化的周报生成器：\n\n1. 爬 GitHub commits\n2. 收集群聊里的精华讨论\n3. GPT 自动生成初稿\n4. 人工简单润色就行\n\n一个人搞有点吃力，有没有想一起做的？我可以负责后端部分～',tags:['效率','自动化','日常'],author:'匿名用户',isAnonymous:true,createdAt:h(26),likes:20,liked:false,favorites:3,favorited:false,comments:[{id:uid(),author:'小明',content:'群聊精华提取那部分最难，有什么思路吗？',createdAt:h(22),parentId:null,replyTo:null}],derivations:[]},
-        {id:uid(),type:'update',title:'花了三个月学 Rust，整理了一份超详细路线图',content:'从零开始学了三个月 Rust，感觉终于摸到门道了。整理了一份学习路线分享给想学的朋友：\n\n基础语法 → 所有权 & Borrowing → 生命周期 → 异步 (tokio) → 写个小项目练手\n\n每个阶段都标了推荐的资源和练习。已经整理到 Notion 了，想要的同学评论区留言我发链接～',tags:['Rust','学习','分享'],author:'小林同学',isAnonymous:false,createdAt:h(50),likes:35,liked:false,favorites:15,favorited:false,comments:[{id:uid(),author:'阿杰',content:'刚准备学，太好了！求链接 🙏',createdAt:h(42),parentId:null,replyTo:null},{id:uid(),author:'老张',content:'比官方文档好理解多了，已收藏',createdAt:h(32),parentId:null,replyTo:null}],derivations:[]},
-        {id:uid(),type:'opportunity',title:'有没有做出海 SaaS 的朋友？找合伙人',content:'团队目前在做一个面向海外市场的 productivity 工具，已经做了市场调研和竞品分析。\n\n现有：产品设计 1 人 + 后端开发 1 人\n还缺：熟悉海外增长 / 运营的合伙人\n\n目标市场北美 + 欧洲 SMB。有相关经验或者认识合适人选的，求推荐求自荐 🙏',tags:['出海','SaaS','创业'],author:'大刘',isAnonymous:false,createdAt:h(74),likes:18,liked:false,favorites:6,favorited:false,comments:[],derivations:[]},
-      ];
-    }
+    function getSeedData() { return []; }
 
     function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 9); }
 
@@ -369,31 +373,83 @@
       return r;
     }
 
+    // ==================== ANNOUNCEMENT ====================
+    function isAnnouncementCollapsed() { return localStorage.getItem(ANNOUNCEMENT_COLLAPSED_KEY) === '1'; }
+
+    function toggleAnnouncement() {
+      const c = isAnnouncementCollapsed();
+      if (c) localStorage.removeItem(ANNOUNCEMENT_COLLAPSED_KEY); else localStorage.setItem(ANNOUNCEMENT_COLLAPSED_KEY, '1');
+      renderAll();
+    }
+
+    function renderAnnouncement() {
+      const collapsed = isAnnouncementCollapsed();
+      if (collapsed) {
+        return `
+        <div id="announcementCard" class="announcement-card card-shadow rounded-card animate-slide-up cursor-pointer press">
+          <div class="px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between">
+            <span class="text-[11px] sm:text-xs font-medium text-gray-500 dark:text-gray-400">📌 置顶公告</span>
+            <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+        </div>`;
+      }
+      return `
+      <div id="announcementCard" class="announcement-card card-shadow rounded-card animate-slide-up">
+        <div class="px-3 sm:px-5 py-3 sm:py-4">
+          <div class="flex items-start justify-between mb-2">
+            <span class="text-[11px] sm:text-xs font-medium text-gray-400 dark:text-gray-500">📌 置顶公告</span>
+            <button id="collapseAnnouncementBtn" class="press p-1.5 rounded-btn text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-black/5 transition-colors shrink-0" title="收起">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+            </button>
+          </div>
+          <h3 class="font-medium text-[15px] sm:text-lg text-gray-800 dark:text-gray-100 mb-2 leading-snug">${esc(ANNOUNCEMENT.title)}</h3>
+          <div class="text-[14px] sm:text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">${esc(ANNOUNCEMENT.content)}</div>
+        </div>
+      </div>`;
+    }
+
+    function bindAnnouncementEvents() {
+      const card = document.getElementById('announcementCard');
+      if (!card) return;
+      if (isAnnouncementCollapsed()) {
+        card.addEventListener('click', toggleAnnouncement);
+      } else {
+        const btn = document.getElementById('collapseAnnouncementBtn');
+        if (btn) btn.addEventListener('click', function(e) { e.stopPropagation(); toggleAnnouncement(); });
+      }
+    }
+
     // ==================== RENDER ====================
     function renderAll() {
-      const filtered = getFilteredPosts();
       if (activeTab !== 'all' || searchQuery) {
         activeFilterLabel.classList.remove('hidden');
         const p = []; if (activeTab !== 'all') p.push(TYPE_INFO[activeTab].icon + ' ' + TYPE_INFO[activeTab].label); if (searchQuery) p.push('搜索: ' + searchQuery);
         activeFilterLabel.textContent = p.join(' · ');
       } else activeFilterLabel.classList.add('hidden');
 
+      const filtered = getFilteredPosts();
+      let announcementHtml = renderAnnouncement();
+      let postsHtml = filtered.map(renderCard).join('');
+
       if (filtered.length === 0) {
-        feedContainer.innerHTML = ''; feedContainer.classList.add('hidden'); emptyState.classList.remove('hidden');
+        feedContainer.innerHTML = announcementHtml;
+        feedContainer.classList.remove('hidden');
+        emptyState.classList.remove('hidden');
         const pure = posts.length === 0 && activeTab === 'all' && !searchQuery;
         $('#emptyCreateBtn').classList.toggle('hidden', !pure);
         emptyState.querySelector('h3').textContent = pure ? '还没有动态呢' : '没找到相关内容';
         emptyState.querySelector('p').textContent = pure ? '快来发第一条吧～' : '换个关键词试试？';
-        return;
+      } else {
+        emptyState.classList.add('hidden');
+        feedContainer.classList.remove('hidden');
+        feedContainer.innerHTML = announcementHtml + postsHtml;
+        bindCardActions();
+        const saved = getSavedNickname();
+        if (saved) {
+          feedContainer.querySelectorAll('.cmt-author-input, .reply-author-input, .deriv-cmt-author, .deriv-author-input').forEach(el => { if (!el.value) el.value = saved; });
+        }
       }
-      emptyState.classList.add('hidden'); feedContainer.classList.remove('hidden');
-      feedContainer.innerHTML = filtered.map(renderCard).join('');
-      bindCardActions();
-      // Auto-fill nicknames
-      const saved = getSavedNickname();
-      if (saved) {
-        feedContainer.querySelectorAll('.cmt-author-input, .reply-author-input, .deriv-cmt-author, .deriv-author-input').forEach(el => { if (!el.value) el.value = saved; });
-      }
+      bindAnnouncementEvents();
     }
 
     function renderCard(post) {
