@@ -2,7 +2,7 @@
 <html lang="zh-CN" class="">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>我们的小圈子</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -10,6 +10,7 @@
       darkMode: 'class',
       theme: {
         extend: {
+          screens: { xs: '420px' },
           colors: {
             warm: { DEFAULT: '#ff7a45', light: '#ff9a76', pale: '#fff0e8', dark: '#e86a35' },
           },
@@ -29,6 +30,7 @@
             toastOut: { '0%': { opacity: '1', transform: 'translateX(0)' }, '100%': { opacity: '0', transform: 'translateX(120%)' } },
             heartPop: { '0%': { transform: 'scale(1)' }, '30%': { transform: 'scale(1.35)' }, '60%': { transform: 'scale(0.85)' }, '100%': { transform: 'scale(1)' } },
             bounceIn: { '0%': { opacity: '0', transform: 'scale(0.8) translateY(10px)' }, '100%': { opacity: '1', transform: 'scale(1) translateY(0)' } },
+            spin: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } },
           },
         },
       },
@@ -37,27 +39,23 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600&display=swap');
 
+    *, *::before, *::after { box-sizing: border-box; }
     * { font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    html, body { max-width: 100%; overflow-x: hidden; }
 
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
     .dark ::-webkit-scrollbar-thumb { background: #555; }
 
-    body {
-      background-color: #f7f7f5;
-      letter-spacing: 0.01em;
-    }
+    body { background-color: #f7f7f5; letter-spacing: 0.01em; }
     .dark body { background-color: #1a1a18; }
 
     .smooth { transition: all 0.25s ease; }
-
     .press:active { transform: scale(0.94); transition: transform 0.1s ease; }
 
-    /* Tab underline */
-    .tab-line {
-      position: relative;
-    }
+    .tab-line { position: relative; }
     .tab-line::after {
       content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 0; height: 1.5px; border-radius: 1px;
@@ -66,24 +64,17 @@
     .dark .tab-line::after { background: #ff9a76; }
     .tab-line.active::after { width: 60%; }
 
-    /* Card shadow */
     .card-shadow {
       box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.03);
+      max-width: 100%; overflow-x: hidden;
     }
-    .card-shadow:hover {
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-    }
+    .card-shadow:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04); }
     .dark .card-shadow {
       box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.15);
     }
-    .dark .card-shadow:hover {
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
-    }
+    .dark .card-shadow:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2); }
 
-    .modal-backdrop {
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(6px);
-    }
+    .modal-backdrop { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(6px); }
 
     .toast-container {
       position: fixed; top: 1rem; right: 1rem; z-index: 9999;
@@ -91,61 +82,66 @@
     }
     .toast-container > * { pointer-events: auto; }
 
-    /* Search expand */
-    .search-wrap { width: 36px; transition: width 0.3s ease; overflow: hidden; }
-    .search-wrap.expanded { width: 180px; }
-    @media (max-width: 640px) { .search-wrap.expanded { width: 140px; } }
+    .search-wrap { width: 30px; transition: width 0.3s ease; overflow: hidden; }
+    .search-wrap.expanded { width: 110px; }
+    @media (min-width: 420px) { .search-wrap { width: 36px; } .search-wrap.expanded { width: 170px; } }
+
+    /* Force all content inside cards to not overflow */
+    article, article * { max-width: 100%; }
+    article input, article textarea, article button { word-break: break-word; }
+    article .break-words { overflow-wrap: break-word; word-break: break-word; }
+    article .flex-1, article .min-w-0 { min-width: 0; }
+    article input[type="text"], article textarea { min-width: 0; }
+
+    /* On small screens, stack input groups vertically */
+    @media (max-width: 419px) {
+      .cmt-row, .reply-row, .deriv-cmt-row { flex-direction: column !important; }
+      .cmt-row input, .reply-row input, .deriv-cmt-row input { width: 100% !important; }
+      .deriv-cmt-row > .flex { width: 100%; }
+      .deriv-cmt-row > .flex input { width: 100% !important; }
+      .deriv-cmt-row > .flex input:first-child { width: 50% !important; }
+    }
   </style>
 </head>
 <body class="min-h-screen dark:text-gray-200">
 
-  <!-- Toast -->
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- ==================== NAV ==================== -->
   <nav class="sticky top-0 z-40 bg-[#f7f7f5]/90 dark:bg-[#1a1a18]/90 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-700/40">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6">
-      <div class="flex items-center justify-between h-14">
-        <!-- Title -->
-        <span class="text-base sm:text-lg font-medium text-gray-800 dark:text-gray-100 tracking-wide shrink-0">我们的小圈子</span>
+    <div class="max-w-4xl mx-auto px-3 sm:px-5">
+      <div class="flex items-center justify-between h-13 sm:h-14">
+        <span class="text-[13px] sm:text-lg font-medium text-gray-800 dark:text-gray-100 tracking-wide shrink-0 mr-0.5 sm:mr-1">我们的小圈子</span>
 
-        <!-- Tabs -->
-        <div class="flex items-center gap-1 sm:gap-2 overflow-x-auto px-2">
-          <button class="tab-line active whitespace-nowrap px-2.5 py-2 text-xs sm:text-sm font-normal text-warm dark:text-warm-light transition-colors" data-tab="all">全部动态</button>
-          <button class="tab-line whitespace-nowrap px-2.5 py-2 text-xs sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="inspiration">灵感脑洞</button>
-          <button class="tab-line whitespace-nowrap px-2.5 py-2 text-xs sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="update">日常碎碎念</button>
-          <button class="tab-line whitespace-nowrap px-2.5 py-2 text-xs sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="opportunity">机会搭子</button>
+        <div class="flex-1 min-w-0 flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto px-1">
+          <button class="tab-line active whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-warm dark:text-warm-light transition-colors" data-tab="all">全部动态</button>
+          <button class="tab-line whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="inspiration">灵感脑洞</button>
+          <button class="tab-line whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="update">日常碎碎念</button>
+          <button class="tab-line whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="opportunity">机会搭子</button>
         </div>
 
-        <!-- Right icons -->
-        <div class="flex items-center gap-0.5 shrink-0">
-          <!-- Search -->
+        <div class="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
           <div class="search-wrap flex items-center" id="searchWrap">
-            <button id="searchToggle" class="press p-1.5 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors shrink-0" title="搜索">
+            <button id="searchToggle" class="press p-1.5 sm:p-2 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors shrink-0" title="搜索">
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </button>
-            <input id="searchInput" type="text" placeholder="搜索动态..."
+            <input id="searchInput" type="text" placeholder="搜索..."
               class="w-full px-2 py-1.5 text-xs sm:text-sm bg-transparent border-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:outline-none">
           </div>
-
-          <!-- Sort -->
-          <select id="sortSelect" class="text-xs bg-transparent border-0 text-gray-400 dark:text-gray-500 focus:outline-none cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 px-1">
+          <select id="sortSelect" class="text-[11px] sm:text-xs bg-transparent border-0 text-gray-400 dark:text-gray-500 focus:outline-none cursor-pointer hover:text-gray-600 dark:hover:text-gray-300 px-0.5 hidden xs:block">
             <option value="newest">最新</option>
             <option value="hottest">最热</option>
           </select>
-
-          <!-- Dark mode -->
-          <button id="darkModeToggle" class="press p-1.5 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors" title="切换模式">
+          <button id="darkModeToggle" class="press p-1.5 sm:p-2 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors" title="模式">
             <svg id="darkIcon" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
           </button>
-
-          <!-- Export -->
-          <button id="exportBtn" class="press p-1.5 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors" title="导出">
+          <button id="syncBtn" class="press p-1.5 sm:p-2 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors" title="同步">
+            <svg id="syncIcon" class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+          <button id="exportBtn" class="press p-1.5 sm:p-2 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors hidden xs:block" title="导出">
             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           </button>
-
-          <!-- Import -->
-          <button id="importBtn" class="press p-1.5 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors" title="导入">
+          <button id="importBtn" class="press p-1.5 sm:p-2 rounded-btn text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200/50 dark:hover:bg-gray-700/50 transition-colors hidden xs:block" title="导入">
             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
           </button>
           <input type="file" id="importFileInput" accept=".json" class="hidden">
@@ -155,137 +151,119 @@
   </nav>
 
   <!-- ==================== MAIN FEED ==================== -->
-  <main class="max-w-[720px] mx-auto px-4 sm:px-5 py-6">
-    <!-- Filter indicator -->
-    <div id="activeFilterLabel" class="hidden mb-4 px-3 py-1.5 bg-warm-pale dark:bg-warm/20 text-warm dark:text-warm-light rounded-btn text-xs font-medium inline-block"></div>
-
-    <!-- Feed -->
-    <div id="feedContainer" class="space-y-4">
-    </div>
-
-    <!-- Empty -->
-    <div id="emptyState" class="hidden flex flex-col items-center justify-center py-24 animate-fade-in">
-      <div class="text-6xl mb-5">🌿</div>
-      <h3 class="text-lg font-normal text-gray-500 dark:text-gray-400 mb-2">还没有动态呢</h3>
-      <p class="text-sm text-gray-400 dark:text-gray-500 mb-6">快来发第一条吧～</p>
-      <button id="emptyCreateBtn" class="press px-6 py-2.5 bg-warm text-white rounded-btn font-medium hover:bg-warm-dark transition-colors text-sm">写一条动态</button>
+  <main class="max-w-[720px] mx-auto px-3 sm:px-5 py-5">
+    <div id="activeFilterLabel" class="hidden mb-3 px-3 py-1.5 bg-warm-pale dark:bg-warm/20 text-warm dark:text-warm-light rounded-btn text-xs font-medium inline-block"></div>
+    <div id="feedContainer" class="space-y-3 sm:space-y-4"></div>
+    <div id="emptyState" class="hidden flex flex-col items-center justify-center py-20 sm:py-24 animate-fade-in">
+      <div class="text-5xl sm:text-6xl mb-4 sm:mb-5">🌿</div>
+      <h3 class="text-base sm:text-lg font-normal text-gray-500 dark:text-gray-400 mb-2">还没有动态呢</h3>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mb-5 sm:mb-6">快来发第一条吧～</p>
+      <button id="emptyCreateBtn" class="press px-5 sm:px-6 py-2.5 bg-warm text-white rounded-btn font-medium hover:bg-warm-dark transition-colors text-sm">写一条动态</button>
     </div>
   </main>
 
   <!-- ==================== FAB ==================== -->
-  <div class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-30 flex flex-col items-center gap-1.5 group">
-    <span class="text-xs text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 dark:bg-gray-800/90 px-2 py-0.5 rounded-lg shadow-sm">发动态</span>
-    <button id="fabBtn" class="press w-13 h-13 sm:w-14 sm:h-14 bg-warm hover:bg-warm-dark text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all" title="发动态">
-      <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+  <div class="fixed bottom-5 right-4 sm:bottom-8 sm:right-8 z-30 flex flex-col items-center gap-1.5 group" id="fabContainer">
+    <span class="text-[11px] text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 dark:bg-gray-800/90 px-2 py-0.5 rounded-lg shadow-sm hidden sm:block">发动态</span>
+    <button id="fabBtn" class="press w-12 h-12 sm:w-14 sm:h-14 bg-warm hover:bg-warm-dark text-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all" title="发动态">
+      <svg class="w-5 h-5 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
     </button>
   </div>
 
-  <!-- ==================== BACK TO TOP ==================== -->
-  <button id="backToTop" class="hidden press fixed bottom-24 right-6 sm:bottom-28 sm:right-8 w-9 h-9 sm:w-10 sm:h-10 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded-full shadow-md hover:shadow-lg flex items-center justify-center transition-all z-20 animate-bounce-in" title="回到顶部">
+  <!-- Back to top -->
+  <button id="backToTop" class="hidden press fixed bottom-20 right-4 sm:bottom-28 sm:right-8 w-9 h-9 sm:w-10 sm:h-10 bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 rounded-full shadow-md hover:shadow-lg flex items-center justify-center transition-all z-20 animate-bounce-in" title="回到顶部">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
   </button>
+
+  <!-- ==================== SYNC MODAL ==================== -->
+  <div id="syncOverlay" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center modal-backdrop animate-fade-in">
+    <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-t-[24px] sm:rounded-card shadow-2xl animate-slide-up">
+      <div class="flex justify-center pt-3 pb-1 sm:hidden"><div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div></div>
+      <div class="px-5 sm:px-6 py-5 sm:py-6">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg font-medium text-gray-800 dark:text-gray-100" id="syncTitle">同步数据</h2>
+          <button id="closeSync" class="press p-2 rounded-btn text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div id="syncContent"></div>
+      </div>
+    </div>
+  </div>
 
   <!-- ==================== POST FORM ==================== -->
   <div id="postFormOverlay" class="hidden fixed inset-0 z-50 flex items-end justify-center modal-backdrop animate-fade-in">
     <div class="w-full max-w-lg bg-white dark:bg-gray-800 rounded-t-[24px] shadow-2xl animate-slide-up max-h-[92vh] overflow-y-auto">
-      <div class="flex justify-center pt-3 pb-1">
-        <div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-      </div>
-      <div class="px-6 pb-8">
+      <div class="flex justify-center pt-3 pb-1"><div class="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div></div>
+      <div class="px-5 sm:px-6 pb-8">
         <div class="flex items-center justify-between mb-5">
           <h2 class="text-lg font-medium text-gray-800 dark:text-gray-100">发动态</h2>
           <button id="closePostForm" class="press p-2 rounded-btn text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
         </div>
-
         <form id="postForm" class="space-y-4">
-          <!-- Type -->
           <div>
             <label class="block text-sm font-normal text-gray-500 dark:text-gray-400 mb-2">分类</label>
-            <div class="flex gap-2">
-              <label class="flex-1 cursor-pointer">
-                <input type="radio" name="type" value="inspiration" class="peer hidden" checked>
-                <div class="text-center py-2.5 px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm dark:peer-checked:text-warm-light font-normal">💡 灵感想法</div>
-              </label>
-              <label class="flex-1 cursor-pointer">
-                <input type="radio" name="type" value="update" class="peer hidden">
-                <div class="text-center py-2.5 px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm dark:peer-checked:text-warm-light font-normal">📝 日常近况</div>
-              </label>
-              <label class="flex-1 cursor-pointer">
-                <input type="radio" name="type" value="opportunity" class="peer hidden">
-                <div class="text-center py-2.5 px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm dark:peer-checked:text-warm-light font-normal">🤝 机会合作</div>
-              </label>
+            <div class="flex gap-1.5 sm:gap-2">
+              <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="inspiration" class="peer hidden" checked><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">💡<br class="sm:hidden">灵感</div></label>
+              <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="update" class="peer hidden"><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">📝<br class="sm:hidden">日常</div></label>
+              <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="opportunity" class="peer hidden"><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">🤝<br class="sm:hidden">合作</div></label>
             </div>
           </div>
-
-          <!-- Title (optional) -->
           <div>
             <label for="postTitle" class="block text-sm font-normal text-gray-500 dark:text-gray-400 mb-1.5">标题 <span class="text-gray-400 dark:text-gray-500 text-xs">（选填）</span></label>
-            <input id="postTitle" type="text" maxlength="100" placeholder="可以不写，适合长内容"
-              class="w-full px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 smooth">
+            <input id="postTitle" type="text" maxlength="100" placeholder="可以不写，适合长内容" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 smooth">
           </div>
-
-          <!-- Content -->
           <div>
             <label for="postContent" class="block text-sm font-normal text-gray-500 dark:text-gray-400 mb-1.5">内容</label>
-            <textarea id="postContent" required rows="5" maxlength="5000" placeholder="分享你的想法、近况或是机会～"
-              class="w-full px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 resize-none smooth leading-relaxed"></textarea>
+            <textarea id="postContent" required rows="4" maxlength="5000" placeholder="分享你的想法、近况或是机会～" class="w-full px-3 sm:px-4 py-3 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 resize-none smooth leading-relaxed"></textarea>
           </div>
-
-          <!-- Tags -->
           <div>
             <label for="postTags" class="block text-sm font-normal text-gray-500 dark:text-gray-400 mb-1.5">标签 <span class="text-gray-400 dark:text-gray-500 text-xs">（逗号分隔）</span></label>
-            <input id="postTags" type="text" placeholder="比如: 日常, 旅行, 美食"
-              class="w-full px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 smooth">
+            <input id="postTags" type="text" placeholder="比如: 日常, 旅行, 美食" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 smooth">
           </div>
-
-          <!-- Author + Anonymous -->
-          <div class="flex gap-3 items-end">
-            <div class="flex-1">
+          <div class="flex gap-2 sm:gap-3 items-end">
+            <div class="flex-1 min-w-0">
               <label for="postAuthor" class="block text-sm font-normal text-gray-500 dark:text-gray-400 mb-1.5">昵称</label>
-              <input id="postAuthor" type="text" required maxlength="30" placeholder="让大家知道你是谁"
-                class="w-full px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 smooth">
+              <input id="postAuthor" type="text" required maxlength="30" placeholder="让大家知道你是谁" class="w-full px-3 sm:px-4 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 smooth">
             </div>
-            <label class="flex items-center gap-2 pb-2.5 cursor-pointer shrink-0">
+            <label class="flex items-center gap-1.5 pb-2.5 cursor-pointer shrink-0">
               <input type="checkbox" id="postAnonymous" class="w-4 h-4 rounded border-gray-300 text-warm focus:ring-warm/20">
-              <span class="text-sm text-gray-500 dark:text-gray-400 font-normal">悄悄发</span>
+              <span class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-normal">悄悄发</span>
             </label>
           </div>
-
           <button type="submit" class="press w-full py-3 bg-warm hover:bg-warm-dark text-white font-medium rounded-btn transition-colors text-sm">发布</button>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- ==================== SCRIPTS ==================== -->
   <script>
   (function() {
     'use strict';
 
-    // ==================== CONSTANTS ====================
     const STORAGE_KEY = 'cc_circle_posts_v3';
     const DARK_MODE_KEY = 'cc_circle_dark';
+    const NICKNAME_KEY = 'cc_circle_nickname';
+    const GIST_TOKEN_KEY = 'cc_circle_gist_token';
+    const GIST_ID_KEY = 'cc_circle_gist_id';
+    const GIST_FILENAME = 'cc-circle-posts.json';
 
     const AVATAR_COLORS = ['#ff7a45','#ff9a76','#febf63','#ffb5a7','#fec89a','#f8ad9d','#ff8c69','#ffab76','#f4a261','#e59866','#ffcfb3','#ffd6ba'];
     const ANON_NAMES = ['小透明','路过的朋友','潜水员','围观的','吃瓜群众','树洞','悄悄话','匿名小可爱'];
-
     const TYPE_INFO = {
       inspiration: { label: '灵感想法', icon: '💡' },
       update: { label: '日常近况', icon: '📝' },
       opportunity: { label: '机会合作', icon: '🤝' },
     };
 
-    function avatarColor(name) {
-      let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-      return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
-    }
+    function avatarColor(name) { let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h); return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]; }
+    function anonName(id) { let h = 0; for (let i = 0; i < id.length; i++) h = id.charCodeAt(i) + ((h << 5) - h); return ANON_NAMES[Math.abs(h) % ANON_NAMES.length]; }
 
-    function anonName(id) {
-      let h = 0; for (let i = 0; i < id.length; i++) h = id.charCodeAt(i) + ((h << 5) - h);
-      return ANON_NAMES[Math.abs(h) % ANON_NAMES.length];
-    }
+    // ==================== NICKNAME PERSISTENCE ====================
+    function getSavedNickname() { return localStorage.getItem(NICKNAME_KEY) || ''; }
+    function saveNickname(name) { if (name.trim()) localStorage.setItem(NICKNAME_KEY, name.trim()); }
 
     // ==================== STATE ====================
     let posts = [];
@@ -295,7 +273,6 @@
     let expandedComments = {};
     let replyingTo = {};
 
-    // ==================== DOM REFS ====================
     const $ = (s) => document.querySelector(s);
     const $$ = (s) => document.querySelectorAll(s);
     const feedContainer = $('#feedContainer');
@@ -315,229 +292,108 @@
 
     // ==================== DATA ====================
     function loadPosts() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        posts = raw ? JSON.parse(raw) : getSeedData();
-      } catch (e) { posts = getSeedData(); }
+      try { const raw = localStorage.getItem(STORAGE_KEY); posts = raw ? JSON.parse(raw) : getSeedData(); }
+      catch (e) { posts = getSeedData(); }
     }
-
     function savePosts() { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); }
 
     function getSeedData() {
-      const now = Date.now();
-      const h = (n) => now - 3600000 * n;
-
-      const c1a = { id: uid(), author: '小红', content: '好想法！我之前做过类似的尝试，有空一起聊聊～', createdAt: h(1.2), parentId: null, replyTo: null };
-      const c1b = { id: uid(), author: '小李', content: '边权重这块我推荐试试 TF-IDF + 余弦相似度的组合', createdAt: h(0.6), parentId: null, replyTo: null };
-      const c1c = { id: uid(), author: '小明', content: '有道理，我试试看', createdAt: h(0.2), parentId: c1b.id, replyTo: '小李' };
-
-      const c2a = { id: uid(), author: '小王', content: '文档真的写得超好！', createdAt: h(4), parentId: null, replyTo: null };
-      const c2b = { id: uid(), author: '阿杰', content: '悄悄关注好久了，一路看着涨起来的', createdAt: h(3), parentId: null, replyTo: null };
-      const c2c = { id: uid(), author: '老张', content: '感谢感谢🥹 继续努力', createdAt: h(2.5), parentId: c2b.id, replyTo: '阿杰' };
-      const c2d = { id: uid(), author: '小刘', content: '配置面板有计划开源吗？想用', createdAt: h(1.5), parentId: null, replyTo: null };
-
+      const now = Date.now(); const h = (n) => now - 3600000 * n;
+      const c1a={id:uid(),author:'小红',content:'好想法！我之前做过类似的尝试，有空一起聊聊～',createdAt:h(1.2),parentId:null,replyTo:null};
+      const c1b={id:uid(),author:'小李',content:'边权重这块我推荐试试 TF-IDF + 余弦相似度的组合',createdAt:h(0.6),parentId:null,replyTo:null};
+      const c1c={id:uid(),author:'小明',content:'有道理，我试试看',createdAt:h(0.2),parentId:c1b.id,replyTo:'小李'};
+      const c2a={id:uid(),author:'小王',content:'文档真的写得超好！',createdAt:h(4),parentId:null,replyTo:null};
+      const c2b={id:uid(),author:'阿杰',content:'悄悄关注好久了，一路看着涨起来的',createdAt:h(3),parentId:null,replyTo:null};
+      const c2c={id:uid(),author:'老张',content:'感谢感谢🥹 继续努力',createdAt:h(2.5),parentId:c2b.id,replyTo:'阿杰'};
+      const c2d={id:uid(),author:'小刘',content:'配置面板有计划开源吗？想用',createdAt:h(1.5),parentId:null,replyTo:null};
       return [
-        {
-          id: uid(), type: 'inspiration',
-          title: '用 AI 做社群知识图谱，有人搞过吗？',
-          content: '最近在琢磨一个事：能不能用 LLM 自动从群聊记录里提取知识点，然后搭一个可视化的知识图谱。\n\n大概思路是 embedding 聚类 → GPT 摘要抽取 → 前端渲染。\n\n不知道群里有没有朋友做过类似的？踩过什么坑吗？',
-          tags: ['AI','知识管理','社群'], author: '小明', isAnonymous: false, createdAt: h(2),
-          likes: 12, liked: false, favorites: 5, favorited: false,
-          comments: [c1a, c1b, c1c],
-          derivations: [
-            { id: uid(), title: '', content: '在这个基础上加个 RAG 问答层，让群成员可以直接搜知识库，体验会很好', author: '小红', createdAt: h(1), likes: 5, liked: false, comments: [
-              { id: uid(), author: '小明', content: '这个方向好！我想想怎么整合', createdAt: h(0.7), parentId: null, replyTo: null },
-            ]},
-          ],
-        },
-        {
-          id: uid(), type: 'update',
-          title: '',
-          content: '我们的开源项目破 1K Star 了！！🎉\n\n从去年开始做，熬了无数个夜，终于看到一点成果。感谢群里帮忙测试、提意见、写文档的每一位朋友，这个 milestone 有你们一份。\n\n接下来想搞个可视化的配置面板 + 多语言支持，有想一起玩的随时找我～',
-          tags: ['开源','微服务','日常'], author: '老张', isAnonymous: false, createdAt: h(5),
-          likes: 28, liked: false, favorites: 12, favorited: false,
-          comments: [c2a, c2b, c2c, c2d],
-          derivations: [],
-        },
-        {
-          id: uid(), type: 'opportunity',
-          title: '找一位会 Canvas 的前端一起搞事情',
-          content: '在做一个小众的实时协作白板，后端 Go + WebSocket 已经搞定了，前端缺一个对 Canvas 或者 SVG 熟的朋友。\n\n目前的定位是轻量级在线协作工具，面向小团队。技术栈不复杂，主要是想找一个对交互体验有追求的人一起打磨产品。\n\n每周投入 5-10 小时，远程协作，项目分成。有兴趣的找我私聊～',
-          tags: ['协作','远程','创业'], author: '阿杰', isAnonymous: false, createdAt: h(9),
-          likes: 15, liked: false, favorites: 8, favorited: false,
-          comments: [],
-          derivations: [
-            { id: uid(), title: '', content: '建议了解一下 CRDT 方案，Yjs 不错，处理多人编辑冲突比 OT 简单', author: '技术老刘', createdAt: h(5), likes: 8, liked: false, comments: [] },
-            { id: uid(), title: '', content: 'Figma 用的 WASM 渲染，性能很好，可以参考他们的架构思路', author: '前端爱好者', createdAt: h(3.5), likes: 3, liked: false, comments: [] },
-          ],
-        },
-        {
-          id: uid(), type: 'inspiration',
-          title: '',
-          content: '每次写周报都头大，花一两个小时翻聊天记录和 commit log。想做一个自动化的周报生成器：\n\n1. 爬 GitHub commits\n2. 收集群聊里的精华讨论\n3. GPT 自动生成初稿\n4. 人工简单润色就行\n\n一个人搞有点吃力，有没有想一起做的？我可以负责后端部分～',
-          tags: ['效率','自动化','日常'], author: '匿名用户', isAnonymous: true, createdAt: h(26),
-          likes: 20, liked: false, favorites: 3, favorited: false,
-          comments: [
-            { id: uid(), author: '小明', content: '群聊精华提取那部分最难，有什么思路吗？', createdAt: h(22), parentId: null, replyTo: null },
-          ],
-          derivations: [],
-        },
-        {
-          id: uid(), type: 'update',
-          title: '花了三个月学 Rust，整理了一份超详细路线图',
-          content: '从零开始学了三个月 Rust，感觉终于摸到门道了。整理了一份学习路线分享给想学的朋友：\n\n基础语法 → 所有权 & Borrowing → 生命周期 → 异步 (tokio) → 写个小项目练手\n\n每个阶段都标了推荐的资源和练习。已经整理到 Notion 了，想要的同学评论区留言我发链接～',
-          tags: ['Rust','学习','分享'], author: '小林同学', isAnonymous: false, createdAt: h(50),
-          likes: 35, liked: false, favorites: 15, favorited: false,
-          comments: [
-            { id: uid(), author: '阿杰', content: '刚准备学，太好了！求链接 🙏', createdAt: h(42), parentId: null, replyTo: null },
-            { id: uid(), author: '老张', content: '比官方文档好理解多了，已收藏', createdAt: h(32), parentId: null, replyTo: null },
-          ],
-          derivations: [],
-        },
-        {
-          id: uid(), type: 'opportunity',
-          title: '有没有做出海 SaaS 的朋友？找合伙人',
-          content: '团队目前在做一个面向海外市场的 productivity 工具，已经做了市场调研和竞品分析。\n\n现有：产品设计 1 人 + 后端开发 1 人\n还缺：熟悉海外增长 / 运营的合伙人\n\n目标市场北美 + 欧洲 SMB。有相关经验或者认识合适人选的，求推荐求自荐 🙏',
-          tags: ['出海','SaaS','创业'], author: '大刘', isAnonymous: false, createdAt: h(74),
-          likes: 18, liked: false, favorites: 6, favorited: false,
-          comments: [],
-          derivations: [],
-        },
+        {id:uid(),type:'inspiration',title:'用 AI 做社群知识图谱，有人搞过吗？',content:'最近在琢磨一个事：能不能用 LLM 自动从群聊记录里提取知识点，然后搭一个可视化的知识图谱。\n\n大概思路是 embedding 聚类 → GPT 摘要抽取 → 前端渲染。\n\n不知道群里有没有朋友做过类似的？踩过什么坑吗？',tags:['AI','知识管理','社群'],author:'小明',isAnonymous:false,createdAt:h(2),likes:12,liked:false,favorites:5,favorited:false,comments:[c1a,c1b,c1c],derivations:[{id:uid(),title:'',content:'在这个基础上加个 RAG 问答层，让群成员可以直接搜知识库，体验会很好',author:'小红',createdAt:h(1),likes:5,liked:false,comments:[{id:uid(),author:'小明',content:'这个方向好！我想想怎么整合',createdAt:h(0.7),parentId:null,replyTo:null}]}]},
+        {id:uid(),type:'update',title:'',content:'我们的开源项目破 1K Star 了！！🎉\n\n从去年开始做，熬了无数个夜，终于看到一点成果。感谢群里帮忙测试、提意见、写文档的每一位朋友，这个 milestone 有你们一份。\n\n接下来想搞个可视化的配置面板 + 多语言支持，有想一起玩的随时找我～',tags:['开源','微服务','日常'],author:'老张',isAnonymous:false,createdAt:h(5),likes:28,liked:false,favorites:12,favorited:false,comments:[c2a,c2b,c2c,c2d],derivations:[]},
+        {id:uid(),type:'opportunity',title:'找一位会 Canvas 的前端一起搞事情',content:'在做一个小众的实时协作白板，后端 Go + WebSocket 已经搞定了，前端缺一个对 Canvas 或者 SVG 熟的朋友。\n\n目前的定位是轻量级在线协作工具，面向小团队。技术栈不复杂，主要是想找一个对交互体验有追求的人一起打磨产品。\n\n每周投入 5-10 小时，远程协作，项目分成。有兴趣的找我私聊～',tags:['协作','远程','创业'],author:'阿杰',isAnonymous:false,createdAt:h(9),likes:15,liked:false,favorites:8,favorited:false,comments:[],derivations:[{id:uid(),title:'',content:'建议了解一下 CRDT 方案，Yjs 不错，处理多人编辑冲突比 OT 简单',author:'技术老刘',createdAt:h(5),likes:8,liked:false,comments:[]},{id:uid(),title:'',content:'Figma 用的 WASM 渲染，性能很好，可以参考他们的架构思路',author:'前端爱好者',createdAt:h(3.5),likes:3,liked:false,comments:[]}]},
+        {id:uid(),type:'inspiration',title:'',content:'每次写周报都头大，花一两个小时翻聊天记录和 commit log。想做一个自动化的周报生成器：\n\n1. 爬 GitHub commits\n2. 收集群聊里的精华讨论\n3. GPT 自动生成初稿\n4. 人工简单润色就行\n\n一个人搞有点吃力，有没有想一起做的？我可以负责后端部分～',tags:['效率','自动化','日常'],author:'匿名用户',isAnonymous:true,createdAt:h(26),likes:20,liked:false,favorites:3,favorited:false,comments:[{id:uid(),author:'小明',content:'群聊精华提取那部分最难，有什么思路吗？',createdAt:h(22),parentId:null,replyTo:null}],derivations:[]},
+        {id:uid(),type:'update',title:'花了三个月学 Rust，整理了一份超详细路线图',content:'从零开始学了三个月 Rust，感觉终于摸到门道了。整理了一份学习路线分享给想学的朋友：\n\n基础语法 → 所有权 & Borrowing → 生命周期 → 异步 (tokio) → 写个小项目练手\n\n每个阶段都标了推荐的资源和练习。已经整理到 Notion 了，想要的同学评论区留言我发链接～',tags:['Rust','学习','分享'],author:'小林同学',isAnonymous:false,createdAt:h(50),likes:35,liked:false,favorites:15,favorited:false,comments:[{id:uid(),author:'阿杰',content:'刚准备学，太好了！求链接 🙏',createdAt:h(42),parentId:null,replyTo:null},{id:uid(),author:'老张',content:'比官方文档好理解多了，已收藏',createdAt:h(32),parentId:null,replyTo:null}],derivations:[]},
+        {id:uid(),type:'opportunity',title:'有没有做出海 SaaS 的朋友？找合伙人',content:'团队目前在做一个面向海外市场的 productivity 工具，已经做了市场调研和竞品分析。\n\n现有：产品设计 1 人 + 后端开发 1 人\n还缺：熟悉海外增长 / 运营的合伙人\n\n目标市场北美 + 欧洲 SMB。有相关经验或者认识合适人选的，求推荐求自荐 🙏',tags:['出海','SaaS','创业'],author:'大刘',isAnonymous:false,createdAt:h(74),likes:18,liked:false,favorites:6,favorited:false,comments:[],derivations:[]},
       ];
     }
 
-    // ==================== UTILS ====================
     function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 9); }
 
     function timeAgo(ts) {
       const diff = Date.now() - ts;
-      const sec = Math.floor(diff / 1000);
-      const min = Math.floor(sec / 60);
-      const hr = Math.floor(min / 60);
-      const day = Math.floor(hr / 24);
-
+      const sec = Math.floor(diff / 1000), min = Math.floor(sec / 60), hr = Math.floor(min / 60), day = Math.floor(hr / 24);
       if (sec < 60) return '刚刚';
       if (min < 60) return `${min}分钟前`;
       if (hr < 24) {
-        const d = new Date(ts);
-        const today = new Date();
-        if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
-          const hh = d.getHours();
-          const mm = d.getMinutes().toString().padStart(2, '0');
-          return `今天 ${hh}:${mm}`;
-        }
-        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-        if (d.getDate() === yesterday.getDate() && d.getMonth() === yesterday.getMonth() && d.getFullYear() === yesterday.getFullYear()) {
-          const hh = d.getHours();
-          const mm = d.getMinutes().toString().padStart(2, '0');
-          return `昨天 ${hh}:${mm}`;
-        }
+        const d = new Date(ts), today = new Date();
+        if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) return `今天 ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+        const y = new Date(today); y.setDate(y.getDate() - 1);
+        if (d.getDate() === y.getDate() && d.getMonth() === y.getMonth() && d.getFullYear() === y.getFullYear()) return `昨天 ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
         return `${hr}小时前`;
       }
-      if (day < 7) {
-        const days = ['周日','周一','周二','周三','周四','周五','周六'];
-        return days[new Date(ts).getDay()];
-      }
+      if (day < 7) return ['周日','周一','周二','周三','周四','周五','周六'][new Date(ts).getDay()];
       const d = new Date(ts);
-      const now = new Date();
-      if (d.getFullYear() === now.getFullYear()) return `${d.getMonth() + 1}月${d.getDate()}日`;
+      if (d.getFullYear() === new Date().getFullYear()) return `${d.getMonth() + 1}月${d.getDate()}日`;
       return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
     }
 
-    function esc(str) {
-      const div = document.createElement('div');
-      div.textContent = str;
-      return div.innerHTML;
-    }
+    function esc(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
 
-    // ==================== TOAST ====================
     function toast(msg, type) {
-      const bg = type === 'error' ? 'bg-red-400 text-white' : 'bg-warm text-white';
-      const icon = type === 'error' ? '✕' : '✓';
       const el = document.createElement('div');
-      el.className = `${bg} px-4 py-2.5 rounded-btn shadow-lg text-sm font-normal animate-toast-in flex items-center gap-2`;
-      el.innerHTML = `<span>${icon}</span> ${esc(msg)}`;
+      el.className = `${type === 'error' ? 'bg-red-400' : 'bg-warm'} text-white px-4 py-2.5 rounded-btn shadow-lg text-sm font-normal animate-toast-in flex items-center gap-2`;
+      el.innerHTML = `<span>${type === 'error' ? '✕' : '✓'}</span> ${esc(msg)}`;
       toastContainer.appendChild(el);
-      setTimeout(() => {
-        el.classList.remove('animate-toast-in');
-        el.classList.add('animate-toast-out');
-        el.addEventListener('animationend', () => el.remove());
-      }, 2200);
+      setTimeout(() => { el.classList.remove('animate-toast-in'); el.classList.add('animate-toast-out'); el.addEventListener('animationend', () => el.remove()); }, 2200);
     }
 
-    // ==================== DARK MODE ====================
     function initDarkMode() {
-      const saved = localStorage.getItem(DARK_MODE_KEY);
-      if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.classList.add('dark');
-        updateDarkIcon(true);
-      } else { updateDarkIcon(false); }
+      const s = localStorage.getItem(DARK_MODE_KEY);
+      if (s === 'dark' || (!s && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); updateDarkIcon(true); }
+      else updateDarkIcon(false);
     }
-
-    function toggleDarkMode() {
-      const isDark = document.documentElement.classList.toggle('dark');
-      localStorage.setItem(DARK_MODE_KEY, isDark ? 'dark' : 'light');
-      updateDarkIcon(isDark);
-    }
-
-    function updateDarkIcon(isDark) {
-      $('#darkIcon').innerHTML = isDark
+    function toggleDarkMode() { const d = document.documentElement.classList.toggle('dark'); localStorage.setItem(DARK_MODE_KEY, d ? 'dark' : 'light'); updateDarkIcon(d); }
+    function updateDarkIcon(d) {
+      $('#darkIcon').innerHTML = d
         ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>'
         : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
     }
 
-    // ==================== FILTERING ====================
     function getFilteredPosts() {
-      let result = [...posts];
-      if (activeTab !== 'all') result = result.filter(p => p.type === activeTab);
+      let r = [...posts];
+      if (activeTab !== 'all') r = r.filter(p => p.type === activeTab);
       if (searchQuery.trim()) {
         const q = searchQuery.trim().toLowerCase();
-        result = result.filter(p =>
-          (p.title || '').toLowerCase().includes(q) ||
-          p.content.toLowerCase().includes(q) ||
-          p.tags.some(t => t.toLowerCase().includes(q)) ||
-          p.author.toLowerCase().includes(q) ||
-          p.comments.some(c => c.content.toLowerCase().includes(q))
-        );
+        r = r.filter(p => (p.title||'').toLowerCase().includes(q) || p.content.toLowerCase().includes(q) || p.tags.some(t => t.toLowerCase().includes(q)) || p.author.toLowerCase().includes(q) || p.comments.some(c => c.content.toLowerCase().includes(q)));
       }
-      if (sortBy === 'newest') {
-        result.sort((a, b) => b.createdAt - a.createdAt);
-      } else {
-        result.sort((a, b) => (b.likes + b.favorites + b.comments.length + b.derivations.length) - (a.likes + a.favorites + a.comments.length + b.derivations.length));
-      }
-      return result;
+      r.sort((a, b) => sortBy === 'newest' ? b.createdAt - a.createdAt : (b.likes + b.favorites + b.comments.length + b.derivations.length) - (a.likes + a.favorites + a.comments.length + b.derivations.length));
+      return r;
     }
 
     // ==================== RENDER ====================
     function renderAll() {
       const filtered = getFilteredPosts();
-
-      // Filter label
       if (activeTab !== 'all' || searchQuery) {
         activeFilterLabel.classList.remove('hidden');
-        const parts = [];
-        if (activeTab !== 'all') parts.push(TYPE_INFO[activeTab].icon + ' ' + TYPE_INFO[activeTab].label);
-        if (searchQuery) parts.push('搜索: ' + searchQuery);
-        activeFilterLabel.textContent = parts.join(' · ');
-      } else {
-        activeFilterLabel.classList.add('hidden');
-      }
+        const p = []; if (activeTab !== 'all') p.push(TYPE_INFO[activeTab].icon + ' ' + TYPE_INFO[activeTab].label); if (searchQuery) p.push('搜索: ' + searchQuery);
+        activeFilterLabel.textContent = p.join(' · ');
+      } else activeFilterLabel.classList.add('hidden');
 
       if (filtered.length === 0) {
-        feedContainer.innerHTML = '';
-        feedContainer.classList.add('hidden');
-        emptyState.classList.remove('hidden');
-        const isPureEmpty = posts.length === 0 && activeTab === 'all' && !searchQuery;
-        $('#emptyCreateBtn').classList.toggle('hidden', !isPureEmpty);
-        emptyState.querySelector('h3').textContent = isPureEmpty ? '还没有动态呢' : '没找到相关内容';
-        emptyState.querySelector('p').textContent = isPureEmpty ? '快来发第一条吧～' : '换个关键词试试？';
+        feedContainer.innerHTML = ''; feedContainer.classList.add('hidden'); emptyState.classList.remove('hidden');
+        const pure = posts.length === 0 && activeTab === 'all' && !searchQuery;
+        $('#emptyCreateBtn').classList.toggle('hidden', !pure);
+        emptyState.querySelector('h3').textContent = pure ? '还没有动态呢' : '没找到相关内容';
+        emptyState.querySelector('p').textContent = pure ? '快来发第一条吧～' : '换个关键词试试？';
         return;
       }
-
-      emptyState.classList.add('hidden');
-      feedContainer.classList.remove('hidden');
+      emptyState.classList.add('hidden'); feedContainer.classList.remove('hidden');
       feedContainer.innerHTML = filtered.map(renderCard).join('');
       bindCardActions();
+      // Auto-fill nicknames
+      const saved = getSavedNickname();
+      if (saved) {
+        feedContainer.querySelectorAll('.cmt-author-input, .reply-author-input, .deriv-cmt-author, .deriv-author-input').forEach(el => { if (!el.value) el.value = saved; });
+      }
     }
 
     function renderCard(post) {
@@ -545,118 +401,68 @@
       const name = post.isAnonymous ? anonName(post.id) : esc(post.author);
       const initial = name[0];
       const bg = avatarColor(name);
-      const titleHtml = post.title ? `<h3 class="font-medium text-base sm:text-lg text-gray-800 dark:text-gray-100 mb-2 leading-snug">${esc(post.title)}</h3>` : '';
+      const titleHtml = post.title ? `<h3 class="font-medium text-[15px] sm:text-lg text-gray-800 dark:text-gray-100 mb-1.5 leading-snug">${esc(post.title)}</h3>` : '';
       const contentHtml = esc(post.content).replace(/\n/g, '<br>');
-      const commentCount = post.comments.length;
-      const derivationCount = post.derivations.length;
-
+      const cc = post.comments.length;
+      const dc = post.derivations.length;
       const isExpanded = expandedComments[post.id] || false;
       const visibleComments = isExpanded ? post.comments : post.comments.slice(0, 3);
-      const hasMoreComments = commentCount > 3;
       const topLevel = visibleComments.filter(c => !c.parentId);
 
       return `
-      <article class="card-shadow bg-white dark:bg-gray-800 rounded-card p-4 sm:p-5 animate-slide-up" id="post-${post.id}">
-        <div class="flex gap-3">
-          <!-- Avatar -->
-          <div class="shrink-0">
-            <div class="w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] rounded-full flex items-center justify-center text-white font-medium text-base sm:text-lg select-none" style="background:${bg}">${esc(initial)}</div>
-          </div>
-
-          <!-- Right content -->
-          <div class="flex-1 min-w-0">
-            <!-- Name + time + type -->
-            <div class="flex items-center gap-2 mb-2.5 flex-wrap">
-              <span class="font-medium text-sm text-gray-800 dark:text-gray-100">${name}</span>
-              <span class="text-xs text-gray-400 dark:text-gray-500">${timeAgo(post.createdAt)}</span>
-              <span class="text-xs text-gray-400 dark:text-gray-500">·</span>
-              <span class="text-xs text-gray-400 dark:text-gray-500">${info.icon} ${info.label}</span>
+      <article class="card-shadow bg-white dark:bg-gray-800 rounded-card p-3 sm:p-5 animate-slide-up" id="post-${post.id}">
+        <div class="flex gap-2.5 sm:gap-3">
+          <div class="shrink-0"><div class="w-[36px] h-[36px] sm:w-[44px] sm:h-[44px] rounded-full flex items-center justify-center text-white font-medium text-sm sm:text-lg select-none" style="background:${bg}">${esc(initial)}</div></div>
+          <div class="flex-1 min-w-0 max-w-full">
+            <div class="flex items-center gap-1.5 sm:gap-2 mb-2 flex-wrap">
+              <span class="font-medium text-[13px] sm:text-sm text-gray-800 dark:text-gray-100">${name}</span>
+              <span class="text-[11px] sm:text-xs text-gray-400 dark:text-gray-500">${timeAgo(post.createdAt)}</span>
+              <span class="text-[11px] sm:text-xs text-gray-400 dark:text-gray-500">·</span>
+              <span class="text-[11px] sm:text-xs text-gray-400 dark:text-gray-500">${info.icon} ${info.label}</span>
             </div>
-
-            <!-- Title -->
             ${titleHtml}
-
-            <!-- Content -->
-            <div class="text-sm sm:text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap mb-3">${contentHtml}</div>
-
-            <!-- Tags -->
-            ${post.tags.length > 0 ? `
-            <div class="flex flex-wrap gap-1.5 mb-3">
-              ${post.tags.map(t => `<button class="tag-chip press px-2.5 py-1 text-xs rounded-btn bg-gray-100 dark:bg-gray-700/70 text-gray-500 dark:text-gray-400 hover:text-warm dark:hover:text-warm-light transition-colors font-normal" data-tag="${esc(t)}">#${esc(t)}</button>`).join('')}
-            </div>
-            ` : ''}
-
-            <!-- Interaction bar -->
-            <div class="flex items-center gap-1 -ml-1.5 mb-0">
-              <button class="press like-btn inline-flex items-center gap-1 px-2 py-1.5 rounded-btn transition-colors text-sm ${post.liked ? 'text-red-400' : 'text-gray-400 dark:text-gray-500 hover:text-red-400'}" data-post-id="${post.id}" data-action="like">
-                <svg class="w-[18px] h-[18px] ${post.liked ? 'animate-heart-pop' : ''}" fill="${post.liked ? '#f87171' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <div class="text-[14px] sm:text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words mb-2.5">${contentHtml}</div>
+            ${post.tags.length > 0 ? `<div class="flex flex-wrap gap-1.5 mb-2.5">${post.tags.map(t => `<button class="tag-chip press px-2 py-0.5 text-[11px] sm:text-xs rounded-btn bg-gray-100 dark:bg-gray-700/70 text-gray-500 dark:text-gray-400 hover:text-warm dark:hover:text-warm-light transition-colors font-normal" data-tag="${esc(t)}">#${esc(t)}</button>`).join('')}</div>` : ''}
+            <div class="flex items-center gap-0.5 -ml-1">
+              <button class="press like-btn inline-flex items-center gap-1 px-1.5 sm:px-2 py-1.5 rounded-btn transition-colors text-[13px] sm:text-sm ${post.liked ? 'text-red-400' : 'text-gray-400 dark:text-gray-500 hover:text-red-400'}" data-post-id="${post.id}" data-action="like">
+                <svg class="w-[17px] h-[17px] sm:w-[18px] sm:h-[18px] ${post.liked ? 'animate-heart-pop' : ''}" fill="${post.liked ? '#f87171' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
                 <span data-post-id="${post.id}" data-role="like-count">${post.likes || ''}</span>
               </button>
-              <span class="inline-flex items-center gap-1 px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500">
-                <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                <span>${commentCount || ''}</span>
-              </span>
-              <span class="inline-flex items-center gap-1 px-2 py-1.5 text-sm text-gray-400 dark:text-gray-500">
-                <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                <span>${derivationCount || ''}</span>
-              </span>
+              <span class="inline-flex items-center gap-1 px-1.5 sm:px-2 py-1.5 text-[13px] sm:text-sm text-gray-400 dark:text-gray-500"><svg class="w-[17px] h-[17px] sm:w-[18px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg><span>${cc||''}</span></span>
+              <span class="inline-flex items-center gap-1 px-1.5 sm:px-2 py-1.5 text-[13px] sm:text-sm text-gray-400 dark:text-gray-500"><svg class="w-[17px] h-[17px] sm:w-[18px] sm:h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg><span>${dc||''}</span></span>
             </div>
 
-            <!-- Derivations -->
-            ${derivationCount > 0 ? `
-            <div class="mt-3 bg-[#fafaf8] dark:bg-gray-700/40 rounded-card p-3 sm:p-4">
-              <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2.5">大家的续想法</h4>
-              <div class="space-y-2.5">
-                ${post.derivations.map(d => `
-                  <div class="flex gap-2.5">
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium shrink-0" style="background:${avatarColor(d.author)}">${esc(d.author[0])}</div>
-                    <div class="flex-1 min-w-0">
-                      <div class="flex items-center gap-2 mb-0.5">
-                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300">${esc(d.author)}</span>
-                        <button class="press flex items-center gap-0.5 text-xs ${d.liked ? 'text-red-400' : 'text-gray-400 dark:text-gray-500 hover:text-red-400'} transition-colors" data-post-id="${post.id}" data-derivation-id="${d.id}" data-action="derivation-like">
-                          <svg class="w-3 h-3" fill="${d.liked ? '#f87171' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                          <span>${d.likes || ''}</span>
-                        </button>
+            ${dc > 0 ? `
+            <div class="mt-2.5 bg-[#fafaf8] dark:bg-gray-700/30 rounded-card p-2.5 sm:p-4">
+              <h4 class="text-[11px] sm:text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">大家的续想法</h4>
+              <div class="space-y-2.5">${post.derivations.map(d => `
+                <div class="flex gap-2">
+                  <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-white text-[10px] sm:text-xs font-medium shrink-0" style="background:${avatarColor(d.author)}">${esc(d.author[0])}</div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-1.5 mb-0.5"><span class="text-[11px] sm:text-xs font-medium text-gray-700 dark:text-gray-300">${esc(d.author)}</span><button class="press flex items-center gap-0.5 text-[11px] sm:text-xs ${d.liked?'text-red-400':'text-gray-400 dark:text-gray-500 hover:text-red-400'} transition-colors" data-post-id="${post.id}" data-derivation-id="${d.id}" data-action="derivation-like"><svg class="w-3 h-3" fill="${d.liked?'#f87171':'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg><span>${d.likes||''}</span></button></div>
+                    <p class="text-[12px] sm:text-sm text-gray-600 dark:text-gray-400 break-words">${esc(d.content)}</p>
+                    ${d.comments.length>0?`<div class="mt-1.5 space-y-1">${d.comments.map(c=>`<div class="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400"><span class="font-medium text-gray-600 dark:text-gray-300">${esc(c.author)}</span>：${esc(c.content)}</div>`).join('')}</div>`:''}
+                    <div class="mt-1.5 flex flex-col xs:flex-row gap-1.5 deriv-cmt-row">
+                      <div class="flex gap-1.5">
+                        <input type="text" placeholder="昵称" class="deriv-cmt-author w-12 sm:w-14 px-1.5 py-1.5 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" data-post-id="${post.id}" data-derivation-id="${d.id}">
+                        <input type="text" placeholder="回复..." class="deriv-cmt-input flex-1 px-2 py-1.5 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" data-post-id="${post.id}" data-derivation-id="${d.id}">
                       </div>
-                      <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">${esc(d.content)}</p>
-                      ${d.comments.length > 0 ? `
-                        <div class="mt-2 space-y-1.5">
-                          ${d.comments.map(c => `
-                            <div class="text-xs text-gray-500 dark:text-gray-400"><span class="font-medium text-gray-600 dark:text-gray-300">${esc(c.author)}</span>：${esc(c.content)}</div>
-                          `).join('')}
-                        </div>
-                      ` : ''}
-                      <div class="mt-2 flex gap-1.5">
-                        <input type="text" placeholder="昵称" class="deriv-cmt-author w-12 px-1.5 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" data-post-id="${post.id}" data-derivation-id="${d.id}">
-                        <input type="text" placeholder="回复..." class="deriv-cmt-input flex-1 px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" data-post-id="${post.id}" data-derivation-id="${d.id}">
-                        <button class="deriv-cmt-btn press px-2 py-1 text-xs bg-warm text-white rounded-md hover:bg-warm-dark transition-colors" data-post-id="${post.id}" data-derivation-id="${d.id}">回复</button>
-                      </div>
+                      <button class="deriv-cmt-btn press px-3 py-1.5 text-[11px] sm:text-xs bg-warm text-white rounded-md hover:bg-warm-dark transition-colors shrink-0">回复</button>
                     </div>
                   </div>
-                `).join('')}
-              </div>
+                </div>`).join('')}</div>
               ${renderDerivationForm(post)}
-            </div>
-            ` : ''}
+            </div>` : ''}
 
-            <!-- Comments -->
-            <div class="mt-3">
-              ${commentCount > 0 ? `
-              <div class="space-y-2 mb-3">
-                ${topLevel.map(c => renderCommentTree(c, visibleComments.filter(r => r.parentId === c.id), post.id)).join('')}
-              </div>
-              ${hasMoreComments ? `
-                <button class="expand-comments-btn text-xs font-normal mb-3 ${isExpanded ? 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' : 'text-warm hover:text-warm-dark dark:text-warm-light'}" data-post-id="${post.id}">
-                  ${isExpanded ? '收起评论 ▲' : `查看全部 ${commentCount} 条评论 ▼`}
-                </button>
-              ` : ''}
-              ` : ''}
-
-              <!-- Comment input -->
-              <div class="flex gap-2">
-                <input type="text" class="cmt-author-input w-14 sm:w-16 px-2 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="昵称" maxlength="30" data-post-id="${post.id}">
-                <input type="text" class="cmt-content-input flex-1 px-3 py-1.5 text-xs sm:text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="写评论..." maxlength="500" data-post-id="${post.id}">
-                <button class="submit-cmt-btn press px-4 py-1.5 bg-warm text-white text-xs sm:text-sm font-medium rounded-btn hover:bg-warm-dark transition-colors shrink-0" data-post-id="${post.id}">发送</button>
+            <div class="mt-2.5">
+              ${cc > 0 ? `<div class="space-y-1.5 sm:space-y-2 mb-2.5">${topLevel.map(c => renderCommentTree(c, visibleComments.filter(r => r.parentId === c.id), post.id)).join('')}</div>
+              ${cc > 3 ? `<button class="expand-comments-btn text-[11px] sm:text-xs font-normal mb-2.5 ${isExpanded?'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300':'text-warm hover:text-warm-dark dark:text-warm-light'}" data-post-id="${post.id}">${isExpanded?'收起评论 ▲':`查看全部 ${cc} 条评论 ▼`}</button>` : ''}` : ''}
+              <div class="flex flex-col gap-2">
+                <div class="flex gap-2 cmt-row">
+                  <input type="text" class="cmt-author-input w-14 sm:w-16 px-2 py-2 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="昵称" maxlength="30" data-post-id="${post.id}">
+                  <input type="text" class="cmt-content-input flex-1 px-2.5 sm:px-3 py-2 text-[12px] sm:text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="写评论..." maxlength="500" data-post-id="${post.id}">
+                </div>
+                <button class="submit-cmt-btn press w-full py-2 sm:py-1.5 bg-warm text-white text-[12px] sm:text-sm font-medium rounded-btn hover:bg-warm-dark transition-colors">发送</button>
               </div>
             </div>
           </div>
@@ -668,34 +474,25 @@
       const isReplying = replyingTo[postId] === comment.id;
       const bg = avatarColor(comment.author);
       return `
-      <div class="${comment.parentId ? 'ml-6 pl-3 border-l border-gray-100 dark:border-gray-700' : ''}">
-        <div class="flex gap-2">
-          <div class="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-medium shrink-0 mt-0.5" style="background:${bg}">${esc(comment.author[0])}</div>
+      <div class="${comment.parentId ? 'ml-5 sm:ml-6 pl-2.5 sm:pl-3 border-l border-gray-100 dark:border-gray-700' : ''}">
+        <div class="flex gap-1.5 sm:gap-2">
+          <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-white text-[9px] sm:text-[10px] font-medium shrink-0 mt-0.5" style="background:${bg}">${esc(comment.author[0])}</div>
           <div class="flex-1 min-w-0">
-            <div class="text-xs leading-relaxed">
-              <span class="font-medium text-gray-700 dark:text-gray-300">${esc(comment.author)}</span>
-              ${comment.replyTo ? `<span class="text-gray-400 dark:text-gray-500"> 回复 </span><span class="text-warm dark:text-warm-light">@${esc(comment.replyTo)}</span>` : ''}
-              <span class="text-gray-400 dark:text-gray-500">：</span>
-              <span class="text-gray-600 dark:text-gray-400">${esc(comment.content)}</span>
+            <div class="text-[11px] sm:text-xs leading-relaxed break-words">
+              <span class="font-medium text-gray-700 dark:text-gray-300">${esc(comment.author)}</span>${comment.replyTo?`<span class="text-gray-400 dark:text-gray-500"> 回复 </span><span class="text-warm dark:text-warm-light">@${esc(comment.replyTo)}</span>`:''}<span class="text-gray-400 dark:text-gray-500">：</span><span class="text-gray-600 dark:text-gray-400">${esc(comment.content)}</span>
             </div>
-            <div class="flex items-center gap-3 mt-0.5">
-              <span class="text-[11px] text-gray-400 dark:text-gray-500">${timeAgo(comment.createdAt)}</span>
-              <button class="reply-btn text-[11px] text-gray-400 dark:text-gray-500 hover:text-warm dark:hover:text-warm-light transition-colors font-normal" data-post-id="${postId}" data-comment-id="${comment.id}">回复</button>
-            </div>
+            <div class="flex items-center gap-2 sm:gap-3 mt-0.5"><span class="text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500">${timeAgo(comment.createdAt)}</span><button class="reply-btn text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500 hover:text-warm dark:hover:text-warm-light transition-colors font-normal" data-post-id="${postId}" data-comment-id="${comment.id}">回复</button></div>
             ${isReplying ? `
-            <div class="flex gap-1.5 mt-1.5">
-              <input type="text" class="reply-author-input w-12 px-1.5 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="昵称" data-post-id="${postId}" data-comment-id="${comment.id}">
-              <input type="text" class="reply-content-input flex-1 px-2 py-1 text-xs border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="回复 ${esc(comment.author)}..." data-post-id="${postId}" data-comment-id="${comment.id}">
-              <button class="submit-reply-btn press px-2 py-1 text-xs bg-warm text-white rounded-md hover:bg-warm-dark transition-colors" data-post-id="${postId}" data-comment-id="${comment.id}">发送</button>
-            </div>
-            ` : ''}
+            <div class="mt-1.5 flex flex-col gap-1.5">
+              <div class="flex gap-1.5 reply-row">
+                <input type="text" class="reply-author-input w-12 sm:w-14 px-1.5 py-1.5 text-[11px] border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="昵称" data-post-id="${postId}" data-comment-id="${comment.id}">
+                <input type="text" class="reply-content-input flex-1 px-2 py-1.5 text-[11px] border border-gray-200 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="回复 ${esc(comment.author)}..." data-post-id="${postId}" data-comment-id="${comment.id}">
+              </div>
+              <button class="submit-reply-btn press w-full py-1.5 text-[11px] bg-warm text-white rounded-md hover:bg-warm-dark transition-colors" data-post-id="${postId}" data-comment-id="${comment.id}">发送回复</button>
+            </div>` : ''}
           </div>
         </div>
-        ${replies.length > 0 ? `
-        <div class="mt-1.5 space-y-1.5">
-          ${replies.map(r => renderCommentTree(r, [], postId)).join('')}
-        </div>
-        ` : ''}
+        ${replies.length > 0 ? `<div class="mt-1 space-y-1">${replies.map(r => renderCommentTree(r, [], postId)).join('')}</div>` : ''}
       </div>`;
     }
 
@@ -703,379 +500,409 @@
       return `
       <div class="mt-2.5 pt-2.5 border-t border-dashed border-gray-200 dark:border-gray-600">
         <div class="space-y-2">
-          <textarea class="deriv-content-input w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth resize-none" rows="2" placeholder="说说你的续想法..." maxlength="2000" data-post-id="${post.id}"></textarea>
-          <div class="flex gap-2">
-            <input type="text" class="deriv-author-input flex-1 px-3 py-1.5 text-xs border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="你的昵称" maxlength="30" data-post-id="${post.id}">
-            <button class="submit-deriv-btn press px-4 py-1.5 text-xs bg-warm text-white rounded-btn hover:bg-warm-dark transition-colors" data-post-id="${post.id}">提交续想法</button>
+          <textarea class="deriv-content-input w-full px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth resize-none" rows="2" placeholder="说说你的续想法..." maxlength="2000" data-post-id="${post.id}"></textarea>
+          <div class="flex flex-col xs:flex-row gap-2">
+            <input type="text" class="deriv-author-input flex-1 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-warm/30 smooth" placeholder="你的昵称" maxlength="30" data-post-id="${post.id}">
+            <button class="submit-deriv-btn press w-full xs:w-auto px-4 py-2 text-[11px] sm:text-xs bg-warm text-white rounded-btn hover:bg-warm-dark transition-colors shrink-0">提交续想法</button>
           </div>
         </div>
       </div>`;
     }
 
-    // ==================== CARD EVENT BINDING ====================
+    // ==================== CARD EVENTS ====================
     function bindCardActions() {
-      // Like
-      feedContainer.querySelectorAll('.like-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) { e.stopPropagation(); toggleLike(this.dataset.postId); });
-      });
+      feedContainer.querySelectorAll('.like-btn').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); toggleLike(this.dataset.postId); }); });
+      feedContainer.querySelectorAll('[data-action="derivation-like"]').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); toggleDerivationLike(this.dataset.postId, this.dataset.derivationId); }); });
+      feedContainer.querySelectorAll('.tag-chip').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); searchQuery = this.dataset.tag; searchInput.value = searchQuery; searchWrap.classList.add('expanded'); renderAll(); window.scrollTo({ top: 0, behavior: 'smooth' }); }); });
 
-      // Derivation like
-      feedContainer.querySelectorAll('[data-action="derivation-like"]').forEach(btn => {
-        btn.addEventListener('click', function(e) { e.stopPropagation(); toggleDerivationLike(this.dataset.postId, this.dataset.derivationId); });
-      });
-
-      // Tag chips
-      feedContainer.querySelectorAll('.tag-chip').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          searchQuery = this.dataset.tag;
-          searchInput.value = searchQuery;
-          searchWrap.classList.add('expanded');
-          renderAll();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-      });
-
-      // Submit comment
+      // Comment submit
       feedContainer.querySelectorAll('.submit-cmt-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const postId = this.dataset.postId;
-          const card = this.closest('article');
-          addComment(postId, card.querySelector('.cmt-author-input').value.trim(), card.querySelector('.cmt-content-input').value.trim(), null, null);
-          card.querySelector('.cmt-author-input').value = '';
+          e.stopPropagation(); const pid = this.dataset.postId; const card = this.closest('article');
+          const author = card.querySelector('.cmt-author-input').value.trim();
+          const content = card.querySelector('.cmt-content-input').value.trim();
+          addComment(pid, author, content, null, null);
+          if (author) { saveNickname(author); card.querySelector('.cmt-author-input').value = getSavedNickname(); }
           card.querySelector('.cmt-content-input').value = '';
         });
       });
-
-      // Comment Enter
       feedContainer.querySelectorAll('.cmt-content-input').forEach(input => {
         input.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            const postId = this.dataset.postId;
-            const card = this.closest('article');
-            addComment(postId, card.querySelector('.cmt-author-input').value.trim(), this.value.trim(), null, null);
-            card.querySelector('.cmt-author-input').value = '';
-            this.value = '';
-          }
+          if (e.key === 'Enter') { e.preventDefault(); const pid = this.dataset.postId; const card = this.closest('article'); const author = card.querySelector('.cmt-author-input').value.trim(); addComment(pid, author, this.value.trim(), null, null); if (author) { saveNickname(author); card.querySelector('.cmt-author-input').value = getSavedNickname(); } this.value = ''; }
         });
       });
 
       // Expand comments
-      feedContainer.querySelectorAll('.expand-comments-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const pid = this.dataset.postId;
-          expandedComments[pid] = !expandedComments[pid];
-          renderAll();
-        });
-      });
+      feedContainer.querySelectorAll('.expand-comments-btn').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); const pid = this.dataset.postId; expandedComments[pid] = !expandedComments[pid]; renderAll(); }); });
 
-      // Reply button
-      feedContainer.querySelectorAll('.reply-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const pid = this.dataset.postId;
-          const cid = this.dataset.commentId;
-          replyingTo[pid] = replyingTo[pid] === cid ? null : cid;
-          renderAll();
-        });
-      });
-
-      // Submit reply
+      // Reply
+      feedContainer.querySelectorAll('.reply-btn').forEach(btn => { btn.addEventListener('click', function(e) { e.stopPropagation(); const pid = this.dataset.postId; const cid = this.dataset.commentId; replyingTo[pid] = replyingTo[pid] === cid ? null : cid; renderAll(); }); });
       feedContainer.querySelectorAll('.submit-reply-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const pid = this.dataset.postId;
-          const cid = this.dataset.commentId;
-          const card = this.closest('article');
+          e.stopPropagation(); const pid = this.dataset.postId; const cid = this.dataset.commentId; const card = this.closest('article');
           const authorInput = card.querySelector(`.reply-author-input[data-comment-id="${cid}"]`);
           const contentInput = card.querySelector(`.reply-content-input[data-comment-id="${cid}"]`);
           const parent = posts.find(p => p.id === pid)?.comments.find(c => c.id === cid);
-          addComment(pid, authorInput.value.trim(), contentInput.value.trim(), cid, parent ? parent.author : null);
+          const author = authorInput.value.trim(); const content = contentInput.value.trim();
+          addComment(pid, author, content, cid, parent ? parent.author : null);
+          if (author) saveNickname(author);
           delete replyingTo[pid];
         });
       });
-
-      // Reply Enter
       feedContainer.querySelectorAll('.reply-content-input').forEach(input => {
         input.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            const pid = this.dataset.postId;
-            const cid = this.dataset.commentId;
-            const card = this.closest('article');
-            const authorInput = card.querySelector(`.reply-author-input[data-comment-id="${cid}"]`);
-            const parent = posts.find(p => p.id === pid)?.comments.find(c => c.id === cid);
-            addComment(pid, authorInput.value.trim(), this.value.trim(), cid, parent ? parent.author : null);
-            delete replyingTo[pid];
-            renderAll();
-          }
+          if (e.key === 'Enter') { e.preventDefault(); const pid = this.dataset.postId; const cid = this.dataset.commentId; const card = this.closest('article'); const authorInput = card.querySelector(`.reply-author-input[data-comment-id="${cid}"]`); const parent = posts.find(p => p.id === pid)?.comments.find(c => c.id === cid); const author = authorInput.value.trim(); addComment(pid, author, this.value.trim(), cid, parent ? parent.author : null); if (author) saveNickname(author); delete replyingTo[pid]; renderAll(); }
         });
       });
 
       // Derivation comment
       feedContainer.querySelectorAll('.deriv-cmt-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const pid = this.dataset.postId;
-          const did = this.dataset.derivationId;
-          const card = this.closest('article');
-          addDerivationComment(pid, did, card.querySelector(`.deriv-cmt-author[data-derivation-id="${did}"]`).value.trim(), card.querySelector(`.deriv-cmt-input[data-derivation-id="${did}"]`).value.trim());
-        });
+        btn.addEventListener('click', function(e) { e.stopPropagation(); const pid = this.dataset.postId; const did = this.dataset.derivationId; const card = this.closest('article'); const author = card.querySelector(`.deriv-cmt-author[data-derivation-id="${did}"]`).value.trim(); const content = card.querySelector(`.deriv-cmt-input[data-derivation-id="${did}"]`).value.trim(); addDerivationComment(pid, did, author, content); if (author) { saveNickname(author); card.querySelector(`.deriv-cmt-author[data-derivation-id="${did}"]`).value = getSavedNickname(); } });
       });
-
       feedContainer.querySelectorAll('.deriv-cmt-input').forEach(input => {
-        input.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            const pid = this.dataset.postId;
-            const did = this.dataset.derivationId;
-            const card = this.closest('article');
-            addDerivationComment(pid, did, card.querySelector(`.deriv-cmt-author[data-derivation-id="${did}"]`).value.trim(), this.value.trim());
-            renderAll();
-          }
-        });
+        input.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); const pid = this.dataset.postId; const did = this.dataset.derivationId; const card = this.closest('article'); const author = card.querySelector(`.deriv-cmt-author[data-derivation-id="${did}"]`).value.trim(); addDerivationComment(pid, did, author, this.value.trim()); if (author) saveNickname(author); renderAll(); } });
       });
 
       // Submit derivation
       feedContainer.querySelectorAll('.submit-deriv-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          const pid = this.dataset.postId;
-          const card = this.closest('article');
-          addDerivation(pid, card.querySelector(`.deriv-content-input[data-post-id="${pid}"]`).value.trim(), card.querySelector(`.deriv-author-input[data-post-id="${pid}"]`).value.trim());
-        });
+        btn.addEventListener('click', function(e) { e.stopPropagation(); const pid = this.dataset.postId; const card = this.closest('article'); const author = card.querySelector(`.deriv-author-input[data-post-id="${pid}"]`).value.trim(); const content = card.querySelector(`.deriv-content-input[data-post-id="${pid}"]`).value.trim(); addDerivation(pid, content, author); if (author) saveNickname(author); });
       });
     }
 
     // ==================== ACTIONS ====================
-    function toggleLike(postId) {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
-      post.liked = !post.liked;
-      post.likes += post.liked ? 1 : -1;
-      savePosts();
-      updateLikeUI(postId);
-    }
-
-    function updateLikeUI(postId) {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
-      feedContainer.querySelectorAll(`.like-btn[data-post-id="${postId}"]`).forEach(btn => {
-        const svg = btn.querySelector('svg');
-        const span = btn.querySelector('span');
-        if (post.liked) {
-          btn.classList.add('text-red-400'); btn.classList.remove('text-gray-400', 'dark:text-gray-500', 'hover:text-red-400');
-          svg.setAttribute('fill', '#f87171');
-        } else {
-          btn.classList.remove('text-red-400'); btn.classList.add('text-gray-400', 'dark:text-gray-500');
-          svg.setAttribute('fill', 'none');
-        }
-        if (span) span.textContent = post.likes || '';
-      });
-    }
+    function toggleLike(postId) { const p = posts.find(p => p.id === postId); if (!p) return; p.liked = !p.liked; p.likes += p.liked ? 1 : -1; savePosts(); updateLikeUI(postId); scheduleAutoUpload(); }
+    function updateLikeUI(postId) { const p = posts.find(p => p.id === postId); if (!p) return; feedContainer.querySelectorAll(`.like-btn[data-post-id="${postId}"]`).forEach(btn => { const svg = btn.querySelector('svg'); const span = btn.querySelector('span'); if (p.liked) { btn.classList.add('text-red-400'); btn.classList.remove('text-gray-400','dark:text-gray-500','hover:text-red-400'); svg.setAttribute('fill','#f87171'); } else { btn.classList.remove('text-red-400'); btn.classList.add('text-gray-400','dark:text-gray-500'); svg.setAttribute('fill','none'); } if (span) span.textContent = p.likes || ''; }); }
 
     function addComment(postId, author, content, parentId, replyTo) {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
+      const p = posts.find(p => p.id === postId); if (!p) return;
       if (!author) { toast('写个昵称吧～', 'error'); return; }
       if (!content.trim()) { toast('评论不能是空的哦', 'error'); return; }
-      post.comments.push({ id: uid(), author, content: content.trim(), createdAt: Date.now(), parentId: parentId || null, replyTo: replyTo || null });
-      if (post.comments.length > 3 && !expandedComments[postId]) expandedComments[postId] = true;
-      savePosts();
-      renderAll();
+      saveNickname(author);
+      p.comments.push({ id: uid(), author, content: content.trim(), createdAt: Date.now(), parentId: parentId || null, replyTo: replyTo || null });
+      if (p.comments.length > 3 && !expandedComments[postId]) expandedComments[postId] = true;
+      savePosts(); renderAll(); scheduleAutoUpload();
     }
 
     function addDerivation(postId, content, author) {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
+      const p = posts.find(p => p.id === postId); if (!p) return;
       if (!content.trim()) { toast('续想法不能是空的～', 'error'); return; }
       if (!author.trim()) { toast('写个昵称吧～', 'error'); return; }
-      post.derivations.push({ id: uid(), title: '', content: content.trim(), author: author.trim(), createdAt: Date.now(), likes: 0, liked: false, comments: [] });
-      savePosts();
-      renderAll();
-      toast('续想法已添加 ✨');
+      saveNickname(author);
+      p.derivations.push({ id: uid(), title: '', content: content.trim(), author: author.trim(), createdAt: Date.now(), likes: 0, liked: false, comments: [] });
+      savePosts(); renderAll(); toast('续想法已添加 ✨'); scheduleAutoUpload();
     }
 
     function addDerivationComment(postId, derivationId, author, content) {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
-      const d = post.derivations.find(d => d.id === derivationId);
-      if (!d) return;
+      const p = posts.find(p => p.id === postId); if (!p) return;
+      const d = p.derivations.find(d => d.id === derivationId); if (!d) return;
       if (!author) { toast('写个昵称吧～', 'error'); return; }
       if (!content.trim()) return;
+      saveNickname(author);
       d.comments.push({ id: uid(), author, content: content.trim(), createdAt: Date.now(), parentId: null, replyTo: null });
-      savePosts();
-      renderAll();
+      savePosts(); renderAll(); scheduleAutoUpload();
     }
 
-    function toggleDerivationLike(postId, derivationId) {
-      const post = posts.find(p => p.id === postId);
-      if (!post) return;
-      const d = post.derivations.find(d => d.id === derivationId);
-      if (!d) return;
-      d.liked = !d.liked;
-      d.likes += d.liked ? 1 : -1;
-      savePosts();
-      renderAll();
-    }
+    function toggleDerivationLike(postId, derivationId) { const p = posts.find(p => p.id === postId); if (!p) return; const d = p.derivations.find(d => d.id === derivationId); if (!d) return; d.liked = !d.liked; d.likes += d.liked ? 1 : -1; savePosts(); renderAll(); scheduleAutoUpload(); }
 
     // ==================== POST FORM ====================
     function openPostForm() {
-      postFormOverlay.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
+      postFormOverlay.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+      const saved = getSavedNickname(); if (saved) $('#postAuthor').value = saved;
       setTimeout(() => $('#postContent').focus(), 400);
     }
-
-    function closePostForm() {
-      postFormOverlay.classList.add('hidden');
-      document.body.style.overflow = '';
-      postForm.reset();
-    }
+    function closePostForm() { postFormOverlay.classList.add('hidden'); document.body.style.overflow = ''; postForm.reset(); }
 
     function submitPost(e) {
       e.preventDefault();
       const type = postForm.querySelector('input[name="type"]:checked').value;
-      const title = $('#postTitle').value.trim();
-      const content = $('#postContent').value.trim();
-      const tags = $('#postTags').value.trim();
-      const author = $('#postAuthor').value.trim();
+      const title = $('#postTitle').value.trim(); const content = $('#postContent').value.trim();
+      const tags = $('#postTags').value.trim(); const author = $('#postAuthor').value.trim();
       const anonymous = $('#postAnonymous').checked;
       if (!content) { toast('写点什么吧～', 'error'); return; }
       if (!author) { toast('留个昵称呗～', 'error'); return; }
-
-      const post = {
-        id: uid(), type, title: title || '', content,
-        tags: tags ? tags.split(/[,，\s]+/).filter(t => t.trim()).map(t => t.trim()) : [],
-        author, isAnonymous: anonymous, createdAt: Date.now(),
-        likes: 0, liked: false, favorites: 0, favorited: false,
-        comments: [], derivations: [],
-      };
-      posts.unshift(post);
-      savePosts();
-      renderAll();
-      closePostForm();
-      toast('发布成功！');
-
-      setTimeout(() => {
-        const el = document.getElementById(`post-${post.id}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.style.boxShadow = '0 0 0 3px rgba(255,122,69,0.2)';
-          setTimeout(() => el.style.boxShadow = '', 2000);
-        }
-      }, 400);
+      saveNickname(author);
+      const post = { id: uid(), type, title: title || '', content, tags: tags ? tags.split(/[,，\s]+/).filter(t => t.trim()).map(t => t.trim()) : [], author, isAnonymous: anonymous, createdAt: Date.now(), likes: 0, liked: false, favorites: 0, favorited: false, comments: [], derivations: [] };
+      posts.unshift(post); savePosts(); renderAll(); closePostForm(); toast('发布成功！'); scheduleAutoUpload();
+      setTimeout(() => { const el = document.getElementById(`post-${post.id}`); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.style.boxShadow = '0 0 0 3px rgba(255,122,69,0.2)'; setTimeout(() => el.style.boxShadow = '', 2000); } }, 400);
     }
 
     // ==================== IMPORT / EXPORT ====================
-    function exportData() {
-      const blob = new Blob([JSON.stringify(posts, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `小圈子备份_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast('备份导出成功');
+    function exportData() { const b = new Blob([JSON.stringify(posts, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `小圈子备份_${new Date().toISOString().slice(0, 10)}.json`; a.click(); URL.revokeObjectURL(u); toast('备份导出成功'); }
+    function importData(file) { const r = new FileReader(); r.onload = function(e) { try { const d = JSON.parse(e.target.result); if (!Array.isArray(d)) throw new Error('格式不对'); if (posts.length > 0 && !confirm('导入会覆盖当前内容，确定继续吗？')) return; posts = d; savePosts(); expandedComments = {}; replyingTo = {}; renderAll(); toast(`成功导入 ${d.length} 条动态`); } catch (err) { toast('导入失败，文件格式不对哦', 'error'); } }; r.readAsText(file); }
+
+    // ==================== GITHUB GIST SYNC ====================
+    const syncOverlay = $('#syncOverlay');
+    const syncContent = $('#syncContent');
+    const syncIcon = $('#syncIcon');
+
+    function getGistToken() { return localStorage.getItem(GIST_TOKEN_KEY); }
+    function getGistId() { return localStorage.getItem(GIST_ID_KEY); }
+    function setGistToken(t) { localStorage.setItem(GIST_TOKEN_KEY, t); }
+    function setGistId(id) { localStorage.setItem(GIST_ID_KEY, id); }
+    function clearGistConfig() { localStorage.removeItem(GIST_TOKEN_KEY); localStorage.removeItem(GIST_ID_KEY); }
+
+    function gistApi(path, method, body) {
+      const token = getGistToken();
+      const opts = { method, headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } };
+      if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+      return fetch(`https://api.github.com${path}`, opts).then(r => { if (!r.ok) return r.json().then(d => { throw new Error(d.message || `HTTP ${r.status}`); }); return r.json(); });
     }
 
-    function importData(file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
+    function createGist(payload) {
+      return gistApi('/gists', 'POST', {
+        description: '我们的小圈子 - 群智共创板数据备份',
+        public: false,
+        files: { [GIST_FILENAME]: { content: JSON.stringify(payload, null, 2) } }
+      });
+    }
+
+    function updateGist(gistId, payload) {
+      return gistApi(`/gists/${gistId}`, 'PATCH', {
+        files: { [GIST_FILENAME]: { content: JSON.stringify(payload, null, 2) } }
+      });
+    }
+
+    function getGist(gistId) {
+      return gistApi(`/gists/${gistId}`, 'GET');
+    }
+
+    function escAttr(str) { return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function openSync() {
+      syncOverlay.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+      renderSyncUI();
+    }
+
+    function closeSync() { syncOverlay.classList.add('hidden'); document.body.style.overflow = ''; }
+
+    function renderSyncUI() {
+      const hasToken = !!getGistToken();
+      const hasGist = !!getGistId();
+
+      if (!hasToken || !hasGist) {
+        $('#syncTitle').textContent = '配置同步';
+        syncContent.innerHTML = `
+          <div class="space-y-4">
+            <div class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              <p class="mb-2">使用 GitHub Gist 在多设备间同步数据。</p>
+              <p class="mb-3">需要一个 <a href="https://github.com/settings/tokens/new?scopes=gist&description=小圈子同步" target="_blank" class="text-warm hover:text-warm-dark underline">GitHub Personal Access Token</a>，勾选 <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-xs">gist</code> 权限即可。</p>
+            </div>
+            <div>
+              <label class="block text-sm font-normal text-gray-500 dark:text-gray-400 mb-1.5">GitHub Token</label>
+              <div class="flex gap-2">
+                <input id="gistTokenInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" class="flex-1 px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-btn bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-warm/20 focus:border-warm/50 smooth" value="${escAttr(getGistToken() || '')}">
+              </div>
+              <p class="text-[11px] text-gray-400 dark:text-gray-500 mt-1.5">Token 仅存在浏览器本地，不会上传到任何第三方</p>
+            </div>
+            <div class="flex gap-2">
+              <button id="syncSaveToken" class="press flex-1 py-2.5 bg-warm text-white font-medium rounded-btn hover:bg-warm-dark transition-colors text-sm">保存并开始同步</button>
+            </div>
+            ${hasToken ? `<button id="syncClearConfig" class="w-full py-2 text-sm text-gray-400 hover:text-red-400 transition-colors mt-2">清除配置</button>` : ''}
+          </div>`;
+        bindSyncSetupEvents();
+      } else {
+        $('#syncTitle').textContent = '同步数据';
+        syncContent.innerHTML = `
+          <div class="space-y-4">
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-card p-3 text-sm text-gray-600 dark:text-gray-400">
+              <p class="mb-1">本地: <span class="font-medium text-gray-800 dark:text-gray-200">${posts.length} 条动态</span></p>
+              <p class="mb-1"><span class="text-gray-400 dark:text-gray-500">Token: ${getGistToken().slice(0,6)}…</span></p>
+              <p id="syncRemoteInfo" class="text-gray-400 dark:text-gray-500">远程: 检查中…</p>
+            </div>
+            <div id="syncActions" class="space-y-2.5">
+              <button id="syncUpload" class="press w-full py-2.5 bg-warm text-white font-medium rounded-btn hover:bg-warm-dark transition-colors text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg> 上传到云端
+              </button>
+              <button id="syncDownload" class="press w-full py-2.5 border border-warm text-warm dark:text-warm-light font-medium rounded-btn hover:bg-warm-pale dark:hover:bg-warm/10 transition-colors text-sm flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg> 从云端下载
+              </button>
+            </div>
+            <button id="syncClearConfig" class="w-full py-2 text-sm text-gray-400 hover:text-red-400 transition-colors">清除配置</button>
+          </div>`;
+        bindSyncActionEvents();
+        checkRemoteGist();
+      }
+    }
+
+    async function findExistingGist() {
+      const gists = await gistApi('/gists?per_page=50', 'GET');
+      for (const g of gists) {
+        if (g.files && g.files[GIST_FILENAME] && g.description && g.description.includes('群智共创板')) {
+          return g;
+        }
+      }
+      return null;
+    }
+
+    function bindSyncSetupEvents() {
+      $('#syncSaveToken').addEventListener('click', async function() {
+        const token = $('#gistTokenInput').value.trim();
+        if (!token) { toast('请输入 GitHub Token', 'error'); return; }
+        if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) { toast('Token 格式看起来不太对，请检查', 'error'); return; }
+        setGistToken(token);
+        syncContent.innerHTML = `<div class="py-8 text-center text-sm text-gray-500 dark:text-gray-400"><svg class="w-6 h-6 mx-auto mb-3 animate-spin text-warm" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>正在连接…</div>`;
         try {
-          const data = JSON.parse(e.target.result);
-          if (!Array.isArray(data)) throw new Error('格式不对');
-          if (posts.length > 0 && !confirm('导入数据会覆盖当前内容，确定要继续吗？')) return;
-          posts = data;
+          const existing = await findExistingGist();
+          if (existing) {
+            setGistId(existing.id);
+            toast('已绑定已有同步数据');
+          } else {
+            const gist = await createGist(posts);
+            setGistId(gist.id);
+            toast('同步已配置完成');
+          }
+          renderSyncUI();
+        } catch (err) {
+          setGistToken(''); setGistId('');
+          toast(`配置失败: ${err.message}`, 'error');
+          renderSyncUI();
+        }
+      });
+    }
+
+    async function checkRemoteGist() {
+      try {
+        const gist = await getGist(getGistId());
+        const remoteData = JSON.parse(gist.files[GIST_FILENAME].content);
+        const remoteCount = Array.isArray(remoteData) ? remoteData.length : 0;
+        const updated = new Date(gist.updated_at);
+        const timeStr = updated.toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        $('#syncRemoteInfo').innerHTML = `远程: <span class="font-medium text-gray-800 dark:text-gray-200">${remoteCount} 条动态</span> · ${timeStr}`;
+      } catch (err) {
+        $('#syncRemoteInfo').textContent = `远程: 无法连接 (${err.message})`;
+      }
+    }
+
+    function setSyncLoading(btn, text) {
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> ${text}`;
+    }
+
+    function bindSyncActionEvents() {
+      $('#syncUpload').addEventListener('click', async function() {
+        setSyncLoading(this, '上传中…');
+        try {
+          await updateGist(getGistId(), posts);
+          toast('已同步到云端');
+          renderSyncUI();
+        } catch (err) {
+          toast(`上传失败: ${err.message}`, 'error');
+          renderSyncUI();
+        }
+      });
+
+      $('#syncDownload').addEventListener('click', async function() {
+        if (posts.length > 0 && !confirm('下载会覆盖当前本地数据，确定继续吗？')) return;
+        setSyncLoading(this, '下载中…');
+        try {
+          const gist = await getGist(getGistId());
+          const remoteData = JSON.parse(gist.files[GIST_FILENAME].content);
+          if (!Array.isArray(remoteData)) throw new Error('远程数据格式不正确');
+          posts = remoteData;
           savePosts();
           expandedComments = {};
           replyingTo = {};
           renderAll();
-          toast(`成功导入 ${data.length} 条动态`);
-        } catch (err) { toast('导入失败，文件格式不对哦', 'error'); }
-      };
-      reader.readAsText(file);
+          toast(`已从云端恢复 ${remoteData.length} 条动态`);
+          renderSyncUI();
+        } catch (err) {
+          toast(`下载失败: ${err.message}`, 'error');
+          renderSyncUI();
+        }
+      });
+    }
+
+    function syncEnabled() { return !!(getGistToken() && getGistId()); }
+
+    function mergeRemote(remoteData) {
+      if (!Array.isArray(remoteData) || remoteData.length === 0) return false;
+      const localMap = {}; posts.forEach(p => localMap[p.id] = p);
+      let added = 0;
+      remoteData.forEach(rp => {
+        if (!localMap[rp.id]) { posts.push(rp); localMap[rp.id] = rp; added++; }
+        else {
+          const lp = localMap[rp.id];
+          const ra = (rp.likes||0) + (rp.favorites||0) + (rp.comments||[]).length + (rp.derivations||[]).length;
+          const la = (lp.likes||0) + (lp.favorites||0) + (lp.comments||[]).length + (lp.derivations||[]).length;
+          if (ra > la) { Object.assign(lp, rp); added++; }
+        }
+      });
+      if (added > 0) { savePosts(); expandedComments = {}; replyingTo = {}; }
+      return added > 0;
+    }
+
+    async function autoDownload() {
+      if (!syncEnabled()) return;
+      try {
+        const gist = await getGist(getGistId());
+        const remoteData = JSON.parse(gist.files[GIST_FILENAME].content);
+        if (mergeRemote(remoteData)) {
+          renderAll();
+          const added = Array.isArray(remoteData) ? remoteData.length : 0;
+          toast(`已从云端同步 ${added} 条动态`);
+          console.log(`🌐 自动同步: 已合并远程 ${added} 条数据`);
+        } else {
+          console.log('🌐 自动同步: 数据已是最新');
+        }
+      } catch (err) { console.log('🌐 自动同步失败:', err.message); }
+    }
+
+    let _autoUploadTimer = null;
+    function scheduleAutoUpload() {
+      if (!syncEnabled()) return;
+      clearTimeout(_autoUploadTimer);
+      _autoUploadTimer = setTimeout(async () => {
+        try { await updateGist(getGistId(), posts); console.log('☁ 已自动上传'); }
+        catch (err) { console.log('☁ 自动上传失败:', err.message); }
+      }, 1500);
     }
 
     // ==================== GLOBAL EVENTS ====================
     function bindEvents() {
-      // Tabs
-      $$('[data-tab]').forEach(btn => {
-        btn.addEventListener('click', function() {
-          $$('[data-tab]').forEach(b => b.classList.remove('active', 'text-warm', 'dark:text-warm-light'));
-          this.classList.add('active', 'text-warm', 'dark:text-warm-light');
-          activeTab = this.dataset.tab;
-          renderAll();
-        });
-      });
-
-      // Search toggle
-      searchToggle.addEventListener('click', () => {
-        const expanded = searchWrap.classList.toggle('expanded');
-        if (expanded) setTimeout(() => searchInput.focus(), 300);
-        else { searchInput.value = ''; searchQuery = ''; renderAll(); }
-      });
-
-      // Search input
-      searchInput.addEventListener('input', () => {
-        searchQuery = searchInput.value;
-        renderAll();
-      });
-
-      // Close search on blur if empty
-      searchInput.addEventListener('blur', () => {
-        if (!searchInput.value.trim()) {
-          searchWrap.classList.remove('expanded');
-          searchQuery = '';
-          renderAll();
-        }
-      });
-
-      // Sort
+      $$('[data-tab]').forEach(btn => { btn.addEventListener('click', function() { $$('[data-tab]').forEach(b => b.classList.remove('active','text-warm','dark:text-warm-light')); this.classList.add('active','text-warm','dark:text-warm-light'); activeTab = this.dataset.tab; renderAll(); }); });
+      searchToggle.addEventListener('click', () => { const ex = searchWrap.classList.toggle('expanded'); if (ex) setTimeout(() => searchInput.focus(), 300); else { searchInput.value = ''; searchQuery = ''; renderAll(); } });
+      searchInput.addEventListener('input', () => { searchQuery = searchInput.value; renderAll(); });
+      searchInput.addEventListener('blur', () => { if (!searchInput.value.trim()) { searchWrap.classList.remove('expanded'); searchQuery = ''; renderAll(); } });
       sortSelect.addEventListener('change', function() { sortBy = this.value; renderAll(); });
-
-      // Dark mode
       darkModeToggle.addEventListener('click', toggleDarkMode);
-
-      // FAB
       fabBtn.addEventListener('click', openPostForm);
-
-      // Post form
       postForm.addEventListener('submit', submitPost);
       $('#closePostForm').addEventListener('click', closePostForm);
       postFormOverlay.addEventListener('click', function(e) { if (e.target === postFormOverlay) closePostForm(); });
-
-      // Empty create
       $('#emptyCreateBtn').addEventListener('click', openPostForm);
-
-      // Export / Import
       $('#exportBtn').addEventListener('click', exportData);
       $('#importBtn').addEventListener('click', () => importFileInput.click());
       importFileInput.addEventListener('change', function() { if (this.files[0]) { importData(this.files[0]); this.value = ''; } });
-
-      // Back to top
+      $('#syncBtn').addEventListener('click', openSync);
+      $('#closeSync').addEventListener('click', closeSync);
+      syncOverlay.addEventListener('click', function(e) { if (e.target === syncOverlay) closeSync(); });
+      // Re-bind sync internal events on each render
+      syncOverlay.addEventListener('click', function(e) {
+        const clearBtn = e.target.closest('#syncClearConfig');
+        if (clearBtn) { clearGistConfig(); renderSyncUI(); toast('同步配置已清除'); }
+      });
       backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-      window.addEventListener('scroll', () => {
-        backToTop.classList.toggle('hidden', window.scrollY <= window.innerHeight);
-      }, { passive: true });
+      window.addEventListener('scroll', () => { backToTop.classList.toggle('hidden', window.scrollY <= window.innerHeight); }, { passive: true });
 
-      // Keyboard
+      // Keyboard-aware FAB positioning
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', () => {
+          const fab = $('#fabContainer');
+          const diff = window.innerHeight - window.visualViewport.height;
+          if (diff > 100) fab.style.bottom = (diff + 16) + 'px';
+          else fab.style.bottom = '';
+        });
+      }
+
+      // Keyboard shortcuts
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && !postFormOverlay.classList.contains('hidden')) closePostForm();
+        if (e.key === 'Escape' && !syncOverlay.classList.contains('hidden')) closeSync();
         if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); if (postFormOverlay.classList.contains('hidden')) openPostForm(); }
       });
     }
 
-    // ==================== INIT ====================
-    function init() {
-      loadPosts();
-      initDarkMode();
-      bindEvents();
-      renderAll();
-    }
-
+    function init() { loadPosts(); initDarkMode(); bindEvents(); renderAll(); autoDownload(); }
     init();
     console.log('🌿 我们的小圈子已就绪');
   })();
