@@ -118,8 +118,8 @@
 
         <div class="flex-1 min-w-0 flex items-center gap-0.5 sm:gap-1.5 overflow-x-auto px-1">
           <button class="tab-line active whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-warm dark:text-warm-light transition-colors" data-tab="all">全部动态</button>
-          <button class="tab-line whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="inspiration">灵感脑洞</button>
           <button class="tab-line whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="update">日常碎碎念</button>
+          <button class="tab-line whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="inspiration">酒后沉思</button>
           <button class="tab-line whitespace-nowrap px-1.5 sm:px-2.5 py-2 text-[11px] sm:text-sm font-normal text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors" data-tab="opportunity">机会搭子</button>
         </div>
 
@@ -209,8 +209,8 @@
           <div>
             <label class="block text-sm font-normal text-gray-500 dark:text-gray-400 mb-2">分类</label>
             <div class="flex gap-1.5 sm:gap-2">
-              <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="inspiration" class="peer hidden" checked><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">💡<br class="sm:hidden">灵感</div></label>
-              <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="update" class="peer hidden"><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">📝<br class="sm:hidden">日常</div></label>
+              <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="update" class="peer hidden" checked><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">📝<br class="sm:hidden">日常</div></label>
+              <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="inspiration" class="peer hidden"><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">🍷<br class="sm:hidden">沉思</div></label>
               <label class="flex-1 cursor-pointer"><input type="radio" name="type" value="opportunity" class="peer hidden"><div class="text-center py-2.5 px-0.5 sm:px-1 rounded-btn border border-gray-200 dark:border-gray-600 peer-checked:border-warm peer-checked:bg-warm-pale dark:peer-checked:bg-warm/15 transition-all text-[11px] sm:text-sm text-gray-500 dark:text-gray-400 peer-checked:text-warm font-normal">🤝<br class="sm:hidden">合作</div></label>
             </div>
           </div>
@@ -258,9 +258,9 @@
     const AVATAR_COLORS = ['#ff7a45','#ff9a76','#febf63','#ffb5a7','#fec89a','#f8ad9d','#ff8c69','#ffab76','#f4a261','#e59866','#ffcfb3','#ffd6ba'];
     const ANON_NAMES = ['小透明','路过的朋友','潜水员','围观的','吃瓜群众','树洞','悄悄话','匿名小可爱'];
     const TYPE_INFO = {
-      inspiration: { label: '灵感想法', icon: '💡' },
-      update: { label: '日常近况', icon: '📝' },
-      opportunity: { label: '机会合作', icon: '🤝' },
+      update: { label: '日常碎碎念', icon: '📝' },
+      inspiration: { label: '酒后沉思', icon: '🍷' },
+      opportunity: { label: '机会搭子', icon: '🤝' },
     };
 
     // ==================== ANNOUNCEMENT CONFIG ====================
@@ -269,13 +269,13 @@
       title: '📢 置顶公告・圈子使用说明',
       content: `哈喽各位～这是我们私享的分享小圈子
 
-✅ 可以发这些内容：
-・灵感脑洞：任何点子、构思、项目想法都能丢进来
-・日常碎碎念：最近的工作生活、学习收获、踩坑经验
-・机会对接：内推、合作、找伙伴、资源互换
+✅ 内容随心发：
+・日常碎碎念：点子构思、工作生活、学习收获，想到啥发啥
+・酒后沉思：深度思考、行业吐槽，沟通理解
+・机会搭子：内推、合作、找搭子、资源互换
 
 💡 小提示：
-看到感兴趣的想法，可以点「续想法」接着延伸思路；右上角同步按钮可以拉取 / 上传最新数据，换设备也不丢内容
+看到感兴趣的内容，可以点「续想法」接着延伸思路；右上角同步按钮可以拉取 / 上传最新数据，换设备也不丢内容
 
 畅所欲言就好，不用有负担～`,
     };
