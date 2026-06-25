@@ -889,16 +889,7 @@
     }
 
     async function autoDownload() {
-      if (!syncEnabled()) return;
-      // First load after v4 migration: push empty data to Gist to clear old data
-      if (!localStorage.getItem(MIGRATED_V4_KEY)) {
-        try {
-          await updateGist(getGistId(), posts);
-          localStorage.setItem(MIGRATED_V4_KEY, '1');
-          console.log('🌐 V4 迁移完成，Gist 已清空');
-        } catch (err) { console.log('🌐 V4 迁移失败:', err.message); }
-        return;
-      }
+      if (!syncEnabled() || !localStorage.getItem(MIGRATED_V4_KEY)) return;
       try {
         const gist = await getGist(getGistId());
         const remoteData = JSON.parse(gist.files[GIST_FILENAME].content);
@@ -972,7 +963,21 @@
       });
     }
 
-    function init() { loadPosts(); initDarkMode(); bindEvents(); renderAll(); autoDownload(); }
+    async function init() {
+      loadPosts();
+      if (!localStorage.getItem(MIGRATED_V4_KEY)) {
+        posts = []; savePosts(); expandedComments = {}; replyingTo = {};
+        if (syncEnabled()) {
+          try { await updateGist(getGistId(), []); localStorage.setItem(MIGRATED_V4_KEY, '1'); }
+          catch (err) { console.log('V4 Gist清理失败，下次加载重试:', err.message); }
+          // Gist清理成功才标记完成；失败则下次加载继续尝试，期间禁止autoDownload
+        } else {
+          localStorage.setItem(MIGRATED_V4_KEY, '1');
+        }
+      }
+      initDarkMode(); bindEvents(); renderAll();
+      autoDownload();
+    }
     init();
     console.log('🌿 我们的小圈子已就绪');
   })();
