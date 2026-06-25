@@ -253,6 +253,7 @@
     const GIST_ID_KEY = 'cc_circle_gist_id';
     const GIST_FILENAME = 'cc-circle-posts.json';
     const ANNOUNCEMENT_COLLAPSED_KEY = 'cc_circle_announcement_collapsed';
+    const MIGRATED_V4_KEY = 'cc_circle_migrated_v4';
 
     const AVATAR_COLORS = ['#ff7a45','#ff9a76','#febf63','#ffb5a7','#fec89a','#f8ad9d','#ff8c69','#ffab76','#f4a261','#e59866','#ffcfb3','#ffd6ba'];
     const ANON_NAMES = ['小透明','路过的朋友','潜水员','围观的','吃瓜群众','树洞','悄悄话','匿名小可爱'];
@@ -889,6 +890,15 @@
 
     async function autoDownload() {
       if (!syncEnabled()) return;
+      // First load after v4 migration: push empty data to Gist to clear old data
+      if (!localStorage.getItem(MIGRATED_V4_KEY)) {
+        try {
+          await updateGist(getGistId(), posts);
+          localStorage.setItem(MIGRATED_V4_KEY, '1');
+          console.log('🌐 V4 迁移完成，Gist 已清空');
+        } catch (err) { console.log('🌐 V4 迁移失败:', err.message); }
+        return;
+      }
       try {
         const gist = await getGist(getGistId());
         const remoteData = JSON.parse(gist.files[GIST_FILENAME].content);
@@ -908,7 +918,11 @@
       if (!syncEnabled()) return;
       clearTimeout(_autoUploadTimer);
       _autoUploadTimer = setTimeout(async () => {
-        try { await updateGist(getGistId(), posts); console.log('☁ 已自动上传'); }
+        try {
+          await updateGist(getGistId(), posts);
+          localStorage.setItem(MIGRATED_V4_KEY, '1');
+          console.log('☁ 已自动上传');
+        }
         catch (err) { console.log('☁ 自动上传失败:', err.message); }
       }, 1500);
     }
